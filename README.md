@@ -1,5 +1,5 @@
 # SPECTRA: Supervised Pathway DEConvolution of InTerpretable Gene ProgRAms
-SPECTRA takes in a single cell gene expression matrix and a set of 
+SPECTRA takes in a single cell gene expression matrix and a set of pathway annotations to fit the data to. 
 
 ```
 gene_set_annotations = {
