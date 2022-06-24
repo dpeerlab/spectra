@@ -16,6 +16,9 @@ gene_set_annotations = {
 
 # Usage
 ```
-import spectra as spc 
+from spectra import SPECTRA as spc
+from spectra import K_est as kst 
+
+L = kst.estimate_L(adata, attribute = "cell_type", highly_variable = True)
 model = spc.est_spectra(adata = adata, L = L, gene_set_dictionary = gene_set_dictionary)
 ```
