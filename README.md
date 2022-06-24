@@ -1,5 +1,15 @@
-# SPECTRA
-Supervised Pathway DEConvolution of InTerpretable Gene ProgRAms
+# SPECTRA: Supervised Pathway DEConvolution of InTerpretable Gene ProgRAms
+SPECTRA takes in a single cell gene expression matrix and a set of 
+
+```
+gene_set_annotations = {
+"global": {"global_ifn_II_response" : ["CIITA", "CXCL10", ...] , "global_TNF_response": ["". ""] },
+"CD8_T": { ... }
+... 
+
+}
+```
+
 
 # Installation 
 
