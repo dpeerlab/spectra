@@ -1,4 +1,3 @@
-# SPECTRA: Supervised Pathway DEConvolution of InTerpretable Gene ProgRAms
 
 ![alt text](img/spectra_img.png?raw=true)
 
