@@ -1,4 +1,7 @@
 # SPECTRA: Supervised Pathway DEConvolution of InTerpretable Gene ProgRAms
+
+![alt text](https://github.com/dpeerlab/spectra/img/spectra_img.png?raw=true)
+
 SPECTRA takes in a single cell gene expression matrix and a set of pathway annotations to fit the data to. 
 
 ```
