@@ -40,3 +40,13 @@ from spectra import K_est as kst
 L = kst.estimate_L(adata, attribute = "cell_type", highly_variable = True)
 model = spc.est_spectra(adata = adata, L = L, gene_set_dictionary = gene_set_dictionary)
 ```
+
+## Fitting via EM 
+For smaller problems we can use a memory intensive EM algorithm instead
+```
+X = adata.X 
+A = binary adjacency matrix 
+model = SPECTRA_EM(X = X, A= A, T = 4)
+model.fit()
+```
+
