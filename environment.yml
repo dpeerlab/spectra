@@ -1,4 +1,4 @@
-name: spade_baselines
+name: spectra
 channels:
   - pytorch
   - conda-forge

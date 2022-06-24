@@ -28,6 +28,7 @@ We recommend setting up a new conda environment for spectra:
 git clone https://github.com/dpeerlab/spectra
 cd spectra
 conda env create -f environment.yml
+conda activate spectra
 pip install .
 ```
 
