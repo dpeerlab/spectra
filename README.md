@@ -3,10 +3,20 @@ SPECTRA takes in a single cell gene expression matrix and a set of pathway annot
 
 ```
 gene_set_annotations = {
-"global": {"global_ifn_II_response" : ["CIITA", "CXCL10", ...] , "global_TNF_response": ["". ""] },
-"CD8_T": { ... }
+"global": {"global_ifn_II_response" : ["CIITA", "CXCL10", ...] , "global_MHCI": ["HLA-A". "HLA-B", "HLA-C"] },
+"CD8_T": {"CD8_exhaustion" : ["CXCL13", "LAG3", "CD39", ...]}
 ... 
 
+}
+```
+
+Alternatively, SPECTRA can take in a set of adjacency matrices representing networks for each cell type:
+
+```
+gene_set_annotations = {
+"global": adjacency_matrix1,
+"CD8_T": adjacency_matrix2,
+...
 }
 ```
 
