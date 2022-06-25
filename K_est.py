@@ -165,6 +165,7 @@ class BEMA:
         lower = self.res_matrix[-1,int((m_0/2)*self.M)]
         return (sum(self.eigenvalues > lower),sum(self.eigenvalues > upper))
 
+
 def estimate_L(adata, attribute, highly_variable = False, **kwargs):
     """ 
 

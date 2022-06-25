@@ -11,6 +11,7 @@ import torch.nn as nn
 import scipy
 import pandas as pd
 from pyvis.network import Network
+import random
 
 from torch.distributions.normal import Normal
 from torch.distributions.log_normal import LogNormal
@@ -972,3 +973,91 @@ def graph_network(adata, mat, gene_set,thres = 0.20, N = 50):
 
     return net
 
+def graph_network_multiple(adata, mat, gene_sets,thres = 0.20, N = 50):
+    gene_set = []
+    for gs in gene_sets:
+        gene_set += gs
+        
+    vocab = adata.var_names[adata.var["spectra_vocab"]]
+    word2id = dict((v, idx) for idx, v in enumerate(vocab))
+    id2word = dict((idx, v) for idx, v in enumerate(vocab))
+    
+    net = Network(height='750px', width='100%', bgcolor='#FFFFFF', font_color='black', notebook = True)
+    net.barnes_hut()
+    idxs = []
+    for term in gene_set:
+        idxs.append(word2id[term])
+    ests = list(set(list(mat[idxs,:].sum(axis = 0).argsort()[::-1][:N]) + idxs))
+    ests_names = []
+    count = 0 
+    
+    color_map = []
+    for gene_set in gene_sets:
+        random_color = ["#"+''.join([random.choice('ABCDEF0123456789') for i in range(6)])]
+        color_map.append(random_color[0])
+        
+    for est in ests:
+        ests_names.append(id2word[est])
+        if est not in idxs:
+            net.add_node(count, label = id2word[est], color = '#00ff1e')
+        else:
+            for i in range(len(gene_sets)):
+                if id2word[est] in gene_sets[i]:
+                    color = color_map[i]
+                    break
+            net.add_node(count, label = id2word[est], color = color)
+        count += 1
+        
+    inferred_mat = mat[ests,:][:,ests]
+    for i in range(len(inferred_mat)):
+        for j in range(i+1, len(inferred_mat)):
+            if inferred_mat[i,j] > thres:
+                net.add_edge(i, j)
+    neighbor_map = net.get_adj_list()
+    for node in net.nodes:
+        node['value'] = len(neighbor_map[node['id']])
+
+    return net
+
+def gene_set_graph(gene_sets):
+    """
+    input
+    [
+    ["a","b", ... ],
+    ["b", "d"],
+    
+    ... 
+    ]
+    """
+    
+    net = Network(height='750px', width='100%', bgcolor='#FFFFFF', font_color='black', notebook = True)
+    net.barnes_hut()
+    count = 0
+    #create nodes
+    genes = []
+    for gene_set in gene_sets:
+        genes += gene_set
+    
+    color_map = []
+    for gene_set in gene_sets:
+        random_color = ["#"+''.join([random.choice('ABCDEF0123456789') for i in range(6)])]
+        color_map.append(random_color[0])
+        
+    for gene in genes:          
+        for i in range(len(gene_sets)):
+            if gene in gene_sets[i]:
+                color = color_map[i]
+                break
+        net.add_node(gene, label = gene, color = color)
+
+    for gene_set in gene_sets:
+        for i in range(len(gene_set)):
+            for j in range(i+1, len(gene_set)):
+                net.add_edge(gene_set[i], gene_set[j])
+
+        
+    neighbor_map = net.get_adj_list()
+    for node in net.nodes:
+        node['value'] = len(neighbor_map[node['id']])
+
+    return net
