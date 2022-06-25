@@ -41,7 +41,7 @@ from spectra import SPECTRA as spc
 from spectra import K_est as kst 
 
 L = kst.estimate_L(adata, attribute = "cell_type", highly_variable = True)
-model = spc.est_spectra(adata = adata, L = L, gene_set_dictionary = gene_set_dictionary)
+model = spc.est_spectra(adata = adata, L = L, gene_set_dictionary = gene_set_dictionary, cell_type_key = "cell_type", use_highly_variable = True)
 ```
 This latter function stores three important quantities in the AnnData. 
 ```
@@ -73,8 +73,13 @@ for large numbers of genes its clumsy to visualize the whole graph - to visualiz
 out = spc.graph_network(adata, soft_graph, gene_set)
 out.show("test_graph.html")
 ```
-this will take N closest genes to your gene set and only visualize this subgraph. The interactive graph file gets saved as an html 
-
+this will take N closest genes to your gene set and only visualize this subgraph. The interactive graph file gets saved as an html. To visualize multiple gene sets at the same time, we have a different version of the function that assigns a random color to each gene set: 
+```
+#gene sets is a list of lists
+out = spc.graph_network_multiple(adata,soft_graph, gene_sets)
+out.show("test_graph.html")
+``` 
+![alt text](img/graph_img.png?raw=true)
 ## Save and load the model
 ```
 #save trained model
