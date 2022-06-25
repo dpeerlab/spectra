@@ -63,7 +63,7 @@ model.return_kappa()
 model.return_gene_scalings()
 ```
 
-##Save and load the model
+## Save and load the model
 ```
 #save trained model
 model.save("test_model")
