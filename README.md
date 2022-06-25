@@ -59,8 +59,8 @@ model.return_cell_scores()
 model.return_factors() 
 model.return_eta()
 model.return_rho()
-model.return_kappa(self)
-model.return_gene_scalings(self)
+model.return_kappa()
+model.return_gene_scalings()
 ```
 
 ##Save and load the model
