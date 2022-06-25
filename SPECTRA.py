@@ -9,6 +9,8 @@ from scipy.special import softmax
 import spectra_util 
 import torch.nn as nn
 import scipy
+import pandas as pd
+from pyvis.network import Network
 
 from torch.distributions.normal import Normal
 from torch.distributions.log_normal import LogNormal
@@ -95,8 +97,6 @@ class SPECTRA(nn.Module):
         > function that operates on AnnData ; need to instantiate model and run 
 `       
         > function to save model 
-        
-        > fix kwargs in both K_est and this 
         
         > markers
         
@@ -399,6 +399,7 @@ class SPECTRA_Model:
             #print(counter)
             opt.zero_grad()
             if self.internal_model.use_cell_types:
+                assert(len(labels) == X.shape[0])
                 loss = self.internal_model.loss(X, labels)
             elif self.internal_model.use_cell_types == False:
                 loss = self.internal_model.loss_no_cell_types(X)
@@ -420,15 +421,16 @@ class SPECTRA_Model:
         #add all model parameters as attributes 
 
         if self.use_cell_types:
-            self.__store_parameters()
+            self.__store_parameters(labels)
         else:
             self.__store_parameters_no_celltypes()
     def save(self, fp):
         torch.save(self.internal_model.state_dict(),fp)
   
+    def load(self,fp):
+        self.internal_model.load_state_dict(torch.load(fp))
 
-
-    def __store_parameters(self):
+    def __store_parameters(self,labels):
 
         """
         Replaces __cell_scores() and __compute factors() and __compute_theta()
@@ -455,8 +457,8 @@ class SPECTRA_Model:
         f  = ["global"]*model.L["global"]
         for cell_type in model.cell_types:
             alpha = torch.exp(model.alpha[cell_type]).detach().numpy()
-            out[model.labels == cell_type, :global_idx] =  alpha[:,:global_idx]
-            out[model.labels == cell_type, tot:tot+model.L[cell_type]] = alpha[:,global_idx:]
+            out[labels == cell_type, :global_idx] =  alpha[:,:global_idx]
+            out[labels == cell_type, tot:tot+model.L[cell_type]] = alpha[:,global_idx:]
             
             tot += model.L[cell_type]
 
@@ -577,6 +579,50 @@ class SPECTRA_Model:
         return self.kappa
     def return_gene_scalings(self): 
         return self.gene_scalings
+    def matching(self, markers, gene_names_dict, threshold = 0.4):
+        """
+        best match based on overlap coefficient
+        """
+        markers = pd.DataFrame(markers)
+        if self.use_cell_types:
+            matches = []
+            jaccards = []
+            for i in range(markers.shape[0]):
+                max_jacc = 0.0 
+                best = ""
+                for key in gene_names_dict.keys():
+                    for gs in gene_names_dict[key].keys():
+                        t = gene_names_dict[key][gs]
+
+                        jacc = spectra_util.overlap_coefficient(list(markers.iloc[i,:]),t)
+                        if jacc > max_jacc:
+                            max_jacc = jacc
+                            best = gs 
+                matches.append(best)
+                jaccards.append(max_jacc)
+            
+        else:
+            matches = []
+            jaccards = []
+            for i in range(markers.shape[0]):
+                max_jacc = 0.0 
+                best = ""
+                for key in gene_names_dict.keys():
+                    t = gene_names_dict[key]
+
+                    jacc = spectra_util.overlap_coefficient(list(markers.iloc[i,:]),t)
+                    if jacc > max_jacc:
+                        max_jacc = jacc
+                        best = key 
+                matches.append(best)
+                jaccards.append(max_jacc)
+        output = []
+        for j in range(markers.shape[0]):
+            if jaccards[j] > threshold:
+                output.append(matches[j])
+            else:
+                output.append("0")
+        return np.array(output)
 
 class SPECTRA_EM:
     """
@@ -861,7 +907,7 @@ def est_spectra(adata, gene_set_dictionary, L = None,use_highly_variable = True,
     spectra = SPECTRA_Model(X = X, labels = labels,  L = L, vocab = vocab, gs_dict = gene_set_dictionary, use_weights = use_weights, lam = lam, delta=delta,kappa = kappa, rho = rho, use_cell_types = use_cell_types)
     spectra.train(X = X, labels = labels,**kwargs)
 
-    adata.varm["SPECTRA_factors"] = spectra.factors
+    adata.uns["SPECTRA_factors"] = spectra.factors
     adata.obsm["SPECTRA_cell_scores"] = spectra.cell_scores
     adata.uns["SPECTRA_markers"] = return_markers(factor_matrix = spectra.factors, id2word = id2word, n_top_vals = n_top_vals)
 
@@ -873,29 +919,10 @@ def return_markers(factor_matrix, id2word,n_top_vals = 100):
     for i in range(idx_matrix.shape[0]):
         for j in range(idx_matrix.shape[1]):
             df.iloc[i,j] = id2word[idx_matrix[i,j]]
-    return df
+    return df.values
 
 
-def matching(markers, gene_names_dict):
-    """
-    best match based on Jaccard
-    """
-    matches = []
-    jaccards = []
-    for i in range(markers.shape[0]):
-        max_jacc = 0.0 
-        best = ""
-        for key in gene_names_dict.keys():
-            for gs in gene_names_dict[key].keys():
-                t = gene_names_dict[key][gs]
-                
-                jacc = spectra_util.overlap_coefficient(list(markers.iloc[i,:]),t)
-                if jacc > max_jacc:
-                    max_jacc = jacc
-                    best = gs 
-        matches.append(best)
-        jaccards.append(max_jacc)
-    return(matches,jaccards)    
+   
 
 def graph_network(model, ct, gs, gene_names_dict,id2word, word2id, thres = 0.65, N = 50):
     net = Network(height='750px', width='100%', bgcolor='#FFFFFF', font_color='black', notebook = True)
