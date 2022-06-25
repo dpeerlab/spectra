@@ -62,6 +62,17 @@ model.return_rho()
 model.return_kappa()
 model.return_gene_scalings()
 ```
+## Accessing the fitted gene-gene graph
+One outcome of fitting spectra is to fit a gene-gene graph where edges represent similarities between latent variables associated with each gene (a smoothed version of transcriptional similarity) 
+To access this for say, TNK cells; use the following
+```
+soft_graph = model.return_graph(ct = "TNK")
+```
+for large numbers of genes its clumsy to visualize the whole graph - to visualize a subgraph formed around a particular list of genes, use:
+```
+spc.graph_network(adata, soft_graph, gene_set)
+```
+this will take N closest genes to your gene set and only visualize this subgraph. 
 
 ## Save and load the model
 ```
