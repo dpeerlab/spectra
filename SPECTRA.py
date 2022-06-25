@@ -140,7 +140,7 @@ class SPECTRA(nn.Module):
             self.adj_matrix = torch.Tensor(adj_matrix) - torch.Tensor(np.diag(np.diag(adj_matrix)))
             adj_matrix_1m = 1.0 - adj_matrix
             self.adj_matrix_1m = torch.Tensor(adj_matrix_1m - np.diag(np.diag(adj_matrix_1m)))
-            if weights:
+            if weights is not None:
                 self.weights = torch.Tensor(weights) - torch.Tensor(np.diag(np.diag(adj_matrix)))
             else:
                 self.weights = self.adj_matrix
@@ -579,6 +579,20 @@ class SPECTRA_Model:
         return self.kappa
     def return_gene_scalings(self): 
         return self.gene_scalings
+    def return_graph(self, ct = "global"):
+        model = self.internal_model
+        if self.use_cell_types:
+            eta = (model.eta[ct]).exp()/(1.0 + (model.eta[ct]).exp())
+            eta = 0.5*(eta + eta.T)
+            theta = torch.softmax(model.theta[ct], dim = 1)
+            mat = contract('il,lj,kj->ik',theta,eta,theta).detach().numpy()
+        else: 
+            eta = model.eta.exp()/(1.0 + model.eta.exp())
+            eta = 0.5*(eta + eta.T)
+            theta = torch.softmax(model.theta, dim = 1)
+            mat = contract('il,lj,kj->ik',theta,eta,theta).detach().numpy()
+        return mat
+        
     def matching(self, markers, gene_names_dict, threshold = 0.4):
         """
         best match based on overlap coefficient
@@ -922,15 +936,12 @@ def return_markers(factor_matrix, id2word,n_top_vals = 100):
     return df.values
 
 
-   
 
-def graph_network(model, ct, gs, gene_names_dict,id2word, word2id, thres = 0.65, N = 50):
+
+def graph_network(mat, gene_names_dict,id2word, word2id, thres = 0.20, N = 50):
     net = Network(height='750px', width='100%', bgcolor='#FFFFFF', font_color='black', notebook = True)
     net.barnes_hut()
-    eta_global = (model.eta[ct]).exp()/(1.0 + (model.eta[ct]).exp())
-    eta_global = 0.5*(eta_global + eta_global.T)
-    theta_global = torch.softmax(model.theta[ct], dim = 1)
-    mat = contract('il,lj,kj->ik',theta_global,eta_global,theta_global).detach().numpy()
+    
     idxs = []
     for term in gene_names_dict[ct][gs]:
         idxs.append(word2id[term])
