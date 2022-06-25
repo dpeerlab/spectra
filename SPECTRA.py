@@ -938,12 +938,17 @@ def return_markers(factor_matrix, id2word,n_top_vals = 100):
 
 
 
-def graph_network(mat, gene_names_dict,id2word, word2id, thres = 0.20, N = 50):
+def graph_network(adata, mat, gene_set,thres = 0.20, N = 50):
+    
+    vocab = adata.var_names[adata.var["spectra_vocab"]]
+    word2id = dict((v, idx) for idx, v in enumerate(vocab))
+    id2word = dict((idx, v) for idx, v in enumerate(vocab))
+    
     net = Network(height='750px', width='100%', bgcolor='#FFFFFF', font_color='black', notebook = True)
     net.barnes_hut()
     
     idxs = []
-    for term in gene_names_dict[ct][gs]:
+    for term in gene_set:
         idxs.append(word2id[term])
     ests = list(set(list(mat[idxs,:].sum(axis = 0).argsort()[::-1][:N]) + idxs))
     ests_names = []

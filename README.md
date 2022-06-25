@@ -70,9 +70,10 @@ soft_graph = model.return_graph(ct = "TNK")
 ```
 for large numbers of genes its clumsy to visualize the whole graph - to visualize a subgraph formed around a particular list of genes, use:
 ```
-spc.graph_network(adata, soft_graph, gene_set)
+out = spc.graph_network(adata, soft_graph, gene_set)
+out.show("test_graph.html")
 ```
-this will take N closest genes to your gene set and only visualize this subgraph. 
+this will take N closest genes to your gene set and only visualize this subgraph. The interactive graph file gets saved as an html 
 
 ## Save and load the model
 ```
