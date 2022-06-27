@@ -6,7 +6,7 @@ from scipy.special import logit
 from tqdm import tqdm 
 from scipy.special import xlogy
 from scipy.special import softmax
-import spectra_util 
+from spectra import spectra_util 
 import torch.nn as nn
 import scipy
 import pandas as pd
