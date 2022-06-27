@@ -24,16 +24,14 @@ gene_set_annotations = {
 
 
 # Installation 
-We recommend setting up a new conda environment for spectra:
+A pypi package will be available soon. For installation: 
  
 ```
 git clone https://github.com/dpeerlab/spectra
 cd spectra
-conda env create -f environment.yml
-conda activate spectra
-pip install .
-```
+pip install . 
 
+```
 # Usage
 We start by importing spectra and a helper package that estimates the number of factors to use for spectra by bulk eigenvalue matching analysis. In some cases, we can run spectra with number of factors equal to number of gene sets.
 ```
