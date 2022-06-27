@@ -91,7 +91,7 @@ out.show("test_graph.html")
 model.save("test_model")
 
 #initialize a model and load trained model
-model = SPECTRA_Model(X = X, labels = labels,  L = L, vocab = vocab, gs_dict = gene_set_dictionary)
+model = spc.SPECTRA_Model(X = X, labels = labels,  L = L, vocab = vocab, gs_dict = gene_set_dictionary)
 model.load("test_model") 
 model.__store_parameters()
 ```
