@@ -32,6 +32,13 @@ cd spectra
 pip install . 
 
 ```
+# Example Data Download:
+Data used for the examples can be found here:
+```
+https://www.dropbox.com/s/jm49egj7lhe83fe/Bassez_10k_subset_scran.h5ad?dl=0
+```
+
+
 # Usage
 We start by importing spectra and a helper package that estimates the number of factors to use for spectra by bulk eigenvalue matching analysis. In some cases, we can run spectra with number of factors equal to number of gene sets.
 ```
