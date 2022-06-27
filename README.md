@@ -99,13 +99,13 @@ model.__store_parameters()
 ## Fitting the model without AnnData
 Instead of passing an AnnData object to `est_spectra` one can pass `np.ndarray` objects directly. The `**kwargs` contains arguments to the training function, `lr_schedule = [1.0,.5,.1,.01,.001,.0001],num_epochs = 10000, verbose = False`. To do this, initialize a model:
 ```
-spectra = SPECTRA_Model(X = X, labels = labels,  L = L, vocab = vocab, gs_dict = gene_set_dictionary, use_weights = use_weights, lam = lam, delta=delta,kappa = kappa, rho = rho, use_cell_types = use_cell_types)
-spectra.train(X = X, labels = labels,**kwargs)
+model = spc.SPECTRA_Model(X = X, labels = labels,  L = L, vocab = vocab, gs_dict = gene_set_dictionary, use_weights = use_weights, lam = lam, delta=delta,kappa = kappa, rho = rho, use_cell_types = use_cell_types)
+model.train(X = X, labels = labels,**kwargs)
 ```
 It is also required to run the model this way if you want to input arbitrary adjacency matrices instead of a dictionary of gene sets. The gene set dictionary is used to create an adjacency matrix when it is not `None`. 
 ```
-spectra = SPECTRA_Model(X = X, labels = labels,  L = L, adj_matrix = adj_matrix, weights = weights, lam = lam, delta=delta,kappa = kappa, rho = rho, use_cell_types = use_cell_types)
-spectra.train(X = X, labels = labels,**kwargs)
+model = SPECTRA_Model(X = X, labels = labels,  L = L, adj_matrix = adj_matrix, weights = weights, lam = lam, delta=delta,kappa = kappa, rho = rho, use_cell_types = use_cell_types)
+model.train(X = X, labels = labels,**kwargs)
 ```
 
 
@@ -114,7 +114,7 @@ For smaller problems we can use a memory intensive EM algorithm instead
 ```
 X = adata.X 
 A = binary adjacency matrix 
-model = SPECTRA_EM(X = X, A= A, T = 4)
+model = spc.SPECTRA_EM(X = X, A= A, T = 4)
 model.fit()
 ```
 
