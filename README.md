@@ -37,7 +37,7 @@ pip install .
 # Usage
 We start by importing spectra and a helper package that estimates the number of factors to use for spectra by bulk eigenvalue matching analysis. In some cases, we can run spectra with number of factors equal to number of gene sets.
 ```
-from spectra import SPECTRA as spc
+from spectra import spectra as spc
 from spectra import K_est as kst 
 
 L = kst.estimate_L(adata, attribute = "cell_type", highly_variable = True)
@@ -80,6 +80,7 @@ out = spc.graph_network_multiple(adata,soft_graph, gene_sets)
 out.show("test_graph.html")
 ``` 
 ![alt text](img/graph_img.png?raw=true)
+
 ## Save and load the model
 ```
 #save trained model
