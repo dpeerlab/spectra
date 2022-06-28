@@ -93,7 +93,7 @@ model.save("test_model")
 #initialize a model and load trained model
 model = spc.SPECTRA_Model(X = X, labels = labels,  L = L, vocab = vocab, gs_dict = gene_set_dictionary)
 model.load("test_model") 
-model.__store_parameters()
+model._SPECTRA_Model__store_parameters(labels = labels) #labels must match
 ```
 
 ## Fitting the model without AnnData
