@@ -428,8 +428,13 @@ class SPECTRA_Model:
     def save(self, fp):
         torch.save(self.internal_model.state_dict(),fp)
   
-    def load(self,fp):
+    def load(self,fp,labels = None):
         self.internal_model.load_state_dict(torch.load(fp))
+        if self.use_cell_types:
+            assert(labels != None)
+            self.__store_parameters(labels)
+        else:
+            self.__store_parameters_no_celltypes()
 
     def __store_parameters(self,labels):
 

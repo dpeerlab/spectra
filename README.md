@@ -43,7 +43,7 @@ from spectra import spectra as spc
 from spectra import K_est as kst 
 
 L = kst.estimate_L(adata, attribute = "cell_type", highly_variable = True)
-model = spc.est_spectra(adata = adata, L = L, gene_set_dictionary = gene_set_dictionary, cell_type_key = "cell_type", use_highly_variable = True)
+model = spc.est_spectra(adata = adata, L = L, gene_set_dictionary = gene_set_dictionary, cell_type_key = "cell_type", use_highly_variable = True, lam = 0.01)
 ```
 This latter function stores three important quantities in the AnnData. Factors are the scores that tell you how much each gene contributes to each factor, while markers is an array of genes with top scores for every factor. Cell scores are similarly the score of each factor for every cell. Finally, vocab is a boolean array that is `True` for genes that were used while fitting the model - note that this quantity is only added to the AnnData when `highly_variable` is set to `True`  
 ```
@@ -92,8 +92,7 @@ model.save("test_model")
 
 #initialize a model and load trained model
 model = spc.SPECTRA_Model(X = X, labels = labels,  L = L, vocab = vocab, gs_dict = gene_set_dictionary)
-model.load("test_model") 
-model._SPECTRA_Model__store_parameters(labels = labels) #labels must match
+model.load("test_model",labels = labels) 
 ```
 
 ## Fitting the model without AnnData
