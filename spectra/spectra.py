@@ -315,7 +315,48 @@ class SPECTRA(nn.Module):
 
         return self.lam*term1 + term2 + term3    
 
-    
+    def initialize(self,gene_sets,val):    
+        """
+        form of gene_sets:
+        
+        cell_type (inc. global) : set of sets of idxs
+        """
+        
+        for ct in self.cell_types:
+            assert(self.L[ct] >= len(gene_sets[ct]))
+            count = 0
+            if self.L[ct] > 0:
+                if len(self.adj_matrix[ct]) > 0:
+                    for gene_set in gene_sets[ct]:
+                        self.theta[ct].data[:,count][gene_set] = val
+                        count = count + 1
+                    for i in range(self.L[ct]):
+                        self.eta[ct].data[i,-1] = -val
+                        self.eta[ct].data[-1,i] = -val
+                    self.theta[ct].data[:,-1][self.adj_matrix[ct].sum(axis = 1) == 0] = val
+                    self.theta[ct].data[:,-1][self.adj_matrix[ct].sum(axis = 1) != 0] = -val
+
+        assert(self.L["global"] >= len(gene_sets["global"]))
+        count = 0
+        for gene_set in gene_sets["global"]:
+            self.theta["global"].data[:,count][gene_set] = val
+            count = count + 1
+        for i in range(self.L["global"]):
+            self.eta["global"].data[i,-1] = -val
+            self.eta["global"].data[-1,i] = -val
+        self.theta["global"].data[:,-1][self.adj_matrix["global"].sum(axis = 1) == 0] = val
+        self.theta["global"].data[:,-1][self.adj_matrix["global"].sum(axis = 1) != 0] = -val
+    def initialize_no_celltypes(self,gs_list,val):
+        assert(self.L >= len(gs_list))
+        count = 0
+        for gene_set in gs_list:
+            self.theta.data[:,count][gene_set] = val
+            count = count + 1
+        for i in range(self.L):
+            self.eta.data[i,-1]= -val 
+            self.eta.data[-1,i] = -val 
+        self.theta.data[:,-1][self.adj_matrix.sum(axis = 1) == 0] = val
+        self.theta.data[:,-1][self.adj_matrix.sum(axis = 1) != 0] = -val 
 class SPECTRAv2(nn.Module):
     """
     Spectra v2: (1) attention based or (2) remove MMSB constraint allowing true multi membership for gene nodes (3) VI uncertainty
@@ -570,7 +611,30 @@ class SPECTRA_Model:
         self.gene_scalings = (model.gene_scaling.exp().detach()/(1.0 + model.gene_scaling.exp().detach())).numpy()
         self.rho = (model.rho.exp().detach()/(1.0 + model.rho.exp().detach())).numpy()
         self.kappa = (model.kappa.exp().detach()/(1.0 + model.kappa.exp().detach())).numpy()
-
+    def initialize(annotations, word2id, val = 25):
+        """
+        self.use_cell_types must be True
+        create form of gene_sets:
+        
+        cell_type (inc. global) : set of sets of idxs
+        """
+        if self.use_cell_types:
+            gs_dict = OrderedDict()
+            for ct in annotations.keys():
+                lst_ct = []
+                for key in annotations[ct].keys():
+                    words = annotations[ct][key]
+                    idxs = [word2id[word] for word in words]
+                    lst_ct.append(idxs)
+                gs_dict[ct] = lst_ct
+            self.internal_model.initialize(gs_dict = gs_dict, val = val)
+        else:
+            lst = []
+            for key in annotations.keys():
+                words = annotations[key]
+                idxs = [word2id[word] for word in words] 
+                lst.append(idxs)
+            self.internal_model.initialize_no_celltypes(gs_list = lst, val = val)
     def return_eta_diag(self):
         return self.B_diag
     def return_cell_scores(self):
@@ -876,7 +940,10 @@ def est_spectra(adata, gene_set_dictionary, L = None,use_highly_variable = True,
     
     store factors and cell scores in varm and obsm and markers in .uns 
     """
+    init_flag = False
+
     if L == None:
+        init_flag = True
         if use_cell_types:
             L = {}
             for key in gene_set_dictionary.keys(): 
@@ -925,6 +992,8 @@ def est_spectra(adata, gene_set_dictionary, L = None,use_highly_variable = True,
     id2word = dict((idx, v) for idx, v in enumerate(vocab))
 
     spectra = SPECTRA_Model(X = X, labels = labels,  L = L, vocab = vocab, gs_dict = gene_set_dictionary, use_weights = use_weights, lam = lam, delta=delta,kappa = kappa, rho = rho, use_cell_types = use_cell_types)
+    if init_flag:
+        spectra.initialize(gene_set_dictionary, word2id)
     spectra.train(X = X, labels = labels,**kwargs)
 
     adata.uns["SPECTRA_factors"] = spectra.factors
