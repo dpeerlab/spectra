@@ -363,7 +363,7 @@ class SPECTRA_Model:
 
     also has the .train() function
     """
-    def __init__(self,X, labels,  L, vocab = None, gs_dict = None, use_weights = False, adj_matrix = None, weights = None, lam = 10e-4, delta=0.1,kappa = 0.00001, rho = 0.00001, use_cell_types = True):
+    def __init__(self,X, labels,  L, vocab = None, gs_dict = None, use_weights = False, adj_matrix = None, weights = None, lam = 0.1, delta=0.1,kappa = None, rho = None, use_cell_types = True):
         self.L = L
         self.lam = lam 
         self.delta = delta 
@@ -864,7 +864,7 @@ Public Functions
 
 """
 
-def est_spectra(adata, gene_set_dictionary, L = None,use_highly_variable = True, cell_type_key = None, use_weights = True, lam = 10e-4, delta=0.1,kappa = 0.00001, rho = 0.00001, use_cell_types = True, n_top_vals = 50, **kwargs):
+def est_spectra(adata, gene_set_dictionary, L = None,use_highly_variable = True, cell_type_key = None, use_weights = False, lam = 0.1, delta=0.1,kappa = None, rho = None, use_cell_types = True, n_top_vals = 50, **kwargs):
     """
     SPECTRA function that operates on AnnData objects, 
 

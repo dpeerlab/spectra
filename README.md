@@ -66,6 +66,13 @@ model.return_gene_scalings()
 ```
 Apart from cell scores and factors, we can also retrive a number of other parameters this way that are not by default added to the AnnData. Eta diag is the diagonal of the fitted factor-factor interaction matrix; however, its interpretation is that it measures the extent to which each factor is influenced by the prior information. In practice many of these values are zero, indicating that they are estimated without bias introduced by the annotation set. Eta is the full set of factor-factor interaction matrices, whose off diagonals measure the extent to which factors share the same genes. Rho and kappa are parameters that control the background rate of non-edges and edges respectively. These can be fixed throughout training (default) or estimated from the data by providing `rho = None` or `kappa = None` to the `est_spectra()` function  or to `model.train()`. Finally gene scalings are correction factors that normalize each gene based on its mean expression value. 
 
+## Interpreting marker lists with respect to the input annotations
+To interpret factor weight based marker lists with respect to the input annotations, we take the overlap coefficient with the input sets. The spectra model object has a function to do this `matching(markers, annotations,threshold)`
+```
+model.matching(adata.uns["SPECTRA_markers"], annotations, threshold = 0.4)
+```
+
+
 ## Accessing the fitted gene-gene graph
 One outcome of fitting spectra is to fit a gene-gene graph where edges represent similarities between latent variables associated with each gene (a smoothed version of transcriptional similarity) 
 To access this for say, TNK cells; use the following
