@@ -611,7 +611,7 @@ class SPECTRA_Model:
         self.gene_scalings = (model.gene_scaling.exp().detach()/(1.0 + model.gene_scaling.exp().detach())).numpy()
         self.rho = (model.rho.exp().detach()/(1.0 + model.rho.exp().detach())).numpy()
         self.kappa = (model.kappa.exp().detach()/(1.0 + model.kappa.exp().detach())).numpy()
-    def initialize(annotations, word2id, val = 25):
+    def initialize(self,annotations, word2id, val = 25):
         """
         self.use_cell_types must be True
         create form of gene_sets:
