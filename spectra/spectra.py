@@ -624,7 +624,10 @@ class SPECTRA_Model:
                 lst_ct = []
                 for key in annotations[ct].keys():
                     words = annotations[ct][key]
-                    idxs = [word2id[word] for word in words]
+                    idxs = []
+                    for word in words:
+                        if word in word2id:
+                            idxs.append(word2id[word])
                     lst_ct.append(idxs)
                 gs_dict[ct] = lst_ct
             self.internal_model.initialize(gs_dict = gs_dict, val = val)
@@ -632,7 +635,10 @@ class SPECTRA_Model:
             lst = []
             for key in annotations.keys():
                 words = annotations[key]
-                idxs = [word2id[word] for word in words] 
+                idxs = []
+                for word in words:
+                    if word in word2id:
+                        idxs.append(word2id[word])
                 lst.append(idxs)
             self.internal_model.initialize_no_celltypes(gs_list = lst, val = val)
     def return_eta_diag(self):
