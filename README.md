@@ -40,10 +40,8 @@ Data used for the examples can be found here: [dropbox link to h5ad file](https:
 We start by importing spectra and a helper package that estimates the number of factors to use for spectra by a version of bulk eigenvalue matching analysis. In some cases, we can run spectra with number of factors equal to number of gene sets instead of estimating the number of factors. There are multiple ways to fit the model, but the simplest is to use the `est_spectra()` function in the `spectra` module. After determining the number of factors per cell type with `estimate_L` we can run this. The function modifies the AnnData object in place as well as returning a spectra model object that contains the entire set of fitted model parameters. 
 ```
 from spectra import spectra as spc
-from spectra import K_est as kst 
 
-L = kst.estimate_L(adata, attribute = "cell_type", highly_variable = True)
-model = spc.est_spectra(adata = adata, L = L, gene_set_dictionary = gene_set_dictionary, cell_type_key = "cell_type", use_highly_variable = True, lam = 0.01)
+model = spc.est_spectra(adata = adata,  gene_set_dictionary = gene_set_dictionary, cell_type_key = "cell_type", use_highly_variable = True, lam = 0.01)
 ```
 This latter function stores three important quantities in the AnnData. Factors are the scores that tell you how much each gene contributes to each factor, while markers is an array of genes with top scores for every factor. Cell scores are similarly the score of each factor for every cell. Finally, vocab is a boolean array that is `True` for genes that were used while fitting the model - note that this quantity is only added to the AnnData when `highly_variable` is set to `True`  
 ```
@@ -114,7 +112,12 @@ model = spc.SPECTRA_Model(X = X, labels = labels,  L = L, adj_matrix = adj_matri
 model.train(X = X, labels = labels,**kwargs)
 ```
 
-
+## Estimating the number of factors
+To estimate the number of factors first, run
+```
+from spectra import K_est as kst
+L = kst.estimate_L(adata, attribute = "cell_type", highly_variable = True)
+```
 ## Fitting via EM 
 For smaller problems we can use a memory intensive EM algorithm instead
 ```
