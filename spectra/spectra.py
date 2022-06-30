@@ -357,7 +357,7 @@ class SPECTRA(nn.Module):
             self.eta.data[-1,i] = -val 
         self.theta.data[:,-1][self.adj_matrix.sum(axis = 1) == 0] = val
         self.theta.data[:,-1][self.adj_matrix.sum(axis = 1) != 0] = -val 
-class SPECTRAv2(nn.Module):
+class spectra_attn(nn.Module):
     """
     Spectra v2: (1) attention based or (2) remove MMSB constraint allowing true multi membership for gene nodes (3) VI uncertainty
     > tradeoff between noisy gene sets and getting lowly expressed genes
@@ -365,6 +365,7 @@ class SPECTRAv2(nn.Module):
     > how to add new factors w/ attention based method, if you allow dropping 
     """
     def __init__(self, X, K, gene_set_matrix, lambda_ = 1.0, d = 10, lam = 10e-4):
+        super(spectra_attn, self).__init__()
         self.p = X.shape[1]
         self.n = X.shape[0]
         self.K = K 
