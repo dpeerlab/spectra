@@ -472,7 +472,7 @@ class SPECTRA_Model:
     def load(self,fp,labels = None):
         self.internal_model.load_state_dict(torch.load(fp))
         if self.use_cell_types:
-            assert(labels != None)
+            assert(labels is not None)
             self.__store_parameters(labels)
         else:
             self.__store_parameters_no_celltypes()
