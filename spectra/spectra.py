@@ -631,7 +631,7 @@ class SPECTRA_Model:
                             idxs.append(word2id[word])
                     lst_ct.append(idxs)
                 gs_dict[ct] = lst_ct
-            self.internal_model.initialize(gs_dict = gs_dict, val = val)
+            self.internal_model.initialize(gene_sets = gs_dict, val = val)
         else:
             lst = []
             for key in annotations.keys():
