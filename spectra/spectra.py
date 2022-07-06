@@ -605,7 +605,7 @@ class SPECTRA_Model:
         new_factors = scaled/(scaled.sum(axis = 0,keepdims =True) + 1.0)
 
         self.factors = new_factors
-        self.cell_scores = cell_scores = out*scaled.mean(axis = 1).reshape(1,-1)  
+        self.cell_scores = out*scaled.mean(axis = 1).reshape(1,-1)  
         Bg = model.eta.exp()/(1.0 + model.eta.exp())
         Bg = 0.5*(Bg + Bg.T)
         self.B_diag = torch.diag(Bg).detach().numpy()
