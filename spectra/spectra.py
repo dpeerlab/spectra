@@ -959,7 +959,7 @@ def est_spectra(adata, gene_set_dictionary, L = None,use_highly_variable = True,
                 L[key] = length + 1 
         else:
             length = len(list(gene_set_dictionary.values()))
-            L = length 
+            L = length + 1
     #create vocab list from gene_set_dictionary
     lst = []
     if use_cell_types:
