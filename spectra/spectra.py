@@ -301,7 +301,8 @@ class SPECTRA(nn.Module):
         adj_matrix = self.adj_matrix
         weights = self.weights
         adj_matrix_1m = self.adj_matrix_1m
-        recon = contract('ik,jk->ij', alpha, theta) 
+        theta_ = contract('jk,j->jk',theta, gene_scaling + self.delta)
+        recon = contract('ik,jk->ij', alpha, theta_) 
         term1 = -1.0*(torch.xlogy(X,recon) - recon).sum()
 
 
