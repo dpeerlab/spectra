@@ -1002,6 +1002,12 @@ def est_spectra(adata, gene_set_dictionary, L = None,use_highly_variable = True,
     spectra = SPECTRA_Model(X = X, labels = labels,  L = L, vocab = vocab, gs_dict = gene_set_dictionary, use_weights = use_weights, lam = lam, delta=delta,kappa = kappa, rho = rho, use_cell_types = use_cell_types)
     if init_flag:
         spectra.initialize(gene_set_dictionary, word2id)
+    else:
+        try:
+            spectra.initialize(gene_set_dictionary,word2id)
+        except AssertionError:
+            pass
+            
     spectra.train(X = X, labels = labels,**kwargs)
 
     adata.uns["SPECTRA_factors"] = spectra.factors
