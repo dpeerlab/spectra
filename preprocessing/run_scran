@@ -1,0 +1,14 @@
+#!/bin/bash
+
+PATH_I=/home/wallet/Jupyter/2020_Peer_PDAC_dev_Lowe/scran/input/
+PATH_O=/home/wallet/Jupyter/2020_Peer_PDAC_dev_Lowe/scran/output/
+PATH_T=/home/wallet/Jupyter/scToolKitDev/normalization/scran/1.Scripts/
+
+m_file=combo_fixed_counts_v1.mtx
+g_file=genes.csv
+bc_file=cells.csv
+ofile=sct_combo_fixed_counts_v1.csv
+tfile=run_scran.R
+
+Rscript $PATH_T$tfile $PATH_I$m_file $PATH_I$g_file $PATH_I$bc_file $PATH_O$ofile
+
