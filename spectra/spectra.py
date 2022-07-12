@@ -24,6 +24,11 @@ class SPECTRA(nn.Module):
     
     Parameters
         ----------
+        X : np.ndarray or torch.Tensor
+            the ``(n, p)`` -shaped matrix containing logged expression count data. Used for initialization of self.n and self.p but not stored as an attribute
+        labels : np.ndarray or NoneType
+            the ``(n, )`` -shaped array containing cell type labels. If use_cell_types == False, then should be set to None
+        
         L : dict or OrderedDict [if use_cell_types == False, then int]
             ``number of cell types + 1``-shaped dictionary. Must have "global" as a key, indicating the number of global factors
             {
@@ -34,6 +39,7 @@ class SPECTRA(nn.Module):
             > Format matches output of K_est.py to estimate the number of 
             > Must match cell type labels provided during training
             > Recommended practice is to assign at minimum 2 factors per cell type 
+            > Note that L contains the number of factors that describe the graph.
         adj_matrix :  dict or OrderedDict
             ``a dictionary of adjacency matrices, one for every cell type + a "global" 
             {
@@ -46,74 +52,82 @@ class SPECTRA(nn.Module):
             this weight is ignored. 
             
             if weights == None, no weights are used
-
-
+        lam : float
+            lambda parameter of the model, which controls the relative influence of the graph vs expression loss functions. This term multiplies the expression loss, so smaller values of lambda upweight the prior information  
+        delta : float 
+            delta parameter of the model, which controls a lower bound for gene scaling factors. If delta is small then the maximum ratio between gene scaling factors is larger and lowly expressed genes can be put on the same scale as highly expressed genes. 
+        kappa : float or NoneType
+            kappa controls the background rate of edges in the graph. if kappa is a float, kappa is fixed to the given float value. If kappa == None, then kappa is a parameter that is estimated from the data.  
+        rho : float or NoneType
+            rho controls the bakcground rate of non-edges in the graph. if rho is a float, rho is fixed to the given float value. If rho == None, then rho is a parameter that is estimated from the data. 
+        use_cell_types: bool 
+            use_cell_types is a Boolean variable that determines whether cell type labels are used to fit the model. If False, then parameters are initialized as nn.Parameter rather than as nn.ParameterDict with cell type keys that index nn.Parameter values
+        determinant_penalty : float
+            determinant penalty affects the selection parameters that are fit when L[cell_type] > K[cell_type]. A determinantally regularized selection parameter is fit with determinant penalty that encourages sparsity and diversity.  
     Attributes
         ----------
-        model.delta : 
+        model.delta : delta parameter of the model
 
-        model.lam :
-        
+        model.lam : lambda parameter of the model 
+       
+        model.determinant_penalty : determinant penalty of the model 
+ 
+        model.L : L parameter, either int, dict or OrderedDict() 
+
+        model.p : number of genes
+
+        model.n : number of cells 
+
+        model.use_cell_types : if True then cell types are considered, else cell types ignored. Affects the dimensions of the initialized parameters. 
 
         model.kappa : if not kappa, nn.ParameterDict() if use_cell_types, else nn.Parameter(). If kappa is a float, it is fixed throughout training
 
         model.rho : if not rho, nn.ParamterDict() if use_cell_types, else nn.Parameter. If rho is a float it is fixed throughout training
 
-        model.theta : nn.ParameterDict() 
+        model.adj_matrix : adjacency matrix with diagonal removed. dict containing torch.Tensors 
 
-        model.alpha : 
+        model.adj_matrix_1m : 1 - adjacency matrix with diagonal removed. dict containing torch.Tensors 
+        
+        model.weights : contains edge weights. format matches adj_matrix 
+        
+        model.cell_types : np.ndarray containing array of unique cell types
+       
+        model.cell_type_counts : dict {key = cell type, values = number of cells}
+ 
+        model.theta : nn.ParameterDict() or nn.Parameter() containing the factor weights 
 
-        model.eta : 
+        model.alpha : nn.ParameterDict() or nn.Parameter() containing the cell loadings
 
-        model.gene_scaling : 
+        model.eta : nn.ParameterDict() or nn.Parameter() containing the interaction matrix between factors
 
+        model.gene_scaling : nn.ParameterDict() or nn.Parameter() containing the gene scale factors
+
+        model.selection :  nn.ParameterDict() or nn.Parameter() containing the attention weights. Only initialized when L[cell_type] > K[cell_type] for some cell type or when L > K and use_cell_types == False 
+        
+        model.kgeql_flag : dict or bool. dictionary of boolean values indicating whether K >= L.  When use_cell_types == False, it is a boolean value
 
     Methods
         ----------
 
-        model.loss(self, X, labels) : called by fit if 
+        model.loss(self, X, labels) : called by fit if use_cell_types = True. Evalutes the loss of the model
 
-
-        model.loss_no_cell_types(self,X) : 
-
+        model.loss_no_cell_types(self,X) : called by fit if use_cell_types = False. Evalutes the loss of the model 
+     
+        model.initialize(self, gene_sets,val) : initialize the model based on given dictionary of gene sets. val is a float that determines the strength of the initialization.
+ 
+        model.initialize_no_celltypes(self, gs_list, val) : initialize the model based on given list of gene sets. val is a float that determines the strength of the initialization. 
 
         
     To do: 
         __________
-        DONE > estimating kappa and rho -- need to add constant terms back into loss function 
 
-        DONE > loss_no_cell_types()
-
-        DONE  > Separate class that has train and doesn't expose any pytorch stuff 
-            > and add things like cell_scores , factors after re-scoring, graph_network
-        
-            > cell scores is currently wrong - needs to operator on original factor matrix
-
-            > cell scores and factor matrix for no_cell_types version 
-
-            > store gene_scalings and eta matrix 
-
-            > B_diag 
-
-        > function that operates on AnnData ; need to instantiate model and run 
-`       
-        > function to save model 
-        
-        > markers
-        
-        > matchings
-
-        > graph_network 
-
-        DONE (this works) > test K_est
-
-        > Initialization functions 
+        > Alternative initialization functions 
 
         > comment SPECTRA-EM code
         
         > test lower bound constraint [see pyspade_global.py implementation]
 
-        >Overlap threshold test statistic
+        > Overlap threshold test statistic
 
     
     """
@@ -401,10 +415,110 @@ class spectra_attn(nn.Module):
 
 
 class SPECTRA_Model:
-    """
-    function that wraps pytorch module and gets parameters without exposing any torch stuff
+    """ 
+    
+    Parameters
+        ----------
+        X : np.ndarray or torch.Tensor
+            the ``(n, p)`` -shaped matrix containing logged expression count data. Used for initialization of self.n and self.p but not stored as an attribute
+        labels : np.ndarray or NoneType
+            the ``(n, )`` -shaped array containing cell type labels. If use_cell_types == False, then should be set to None
+        
+        L : dict or OrderedDict [if use_cell_types == False, then int]
+            ``number of cell types + 1``-shaped dictionary. Must have "global" as a key, indicating the number of global factors
+            {
+                "global": 15, 
+                "CD8": 5 
+                ...    
+            }
+            > Format matches output of K_est.py to estimate the number of 
+            > Must match cell type labels provided during training
+            > Recommended practice is to assign at minimum 2 factors per cell type 
+            > L contains the number of factors that describe the graph.
+        adj_matrix :  dict or OrderedDict
+            ``a dictionary of adjacency matrices, one for every cell type + a "global" 
+            {
+                "global": ``(p, p)``-shaped binary np.ndarray
+                "CD8": ... 
 
-    also has the .train() function
+            } 
+        weights : dict or OrderedDict or NoneType [if use_cell_types == False, then ``(p, p)``-shaped array]
+            the ``(p, p)``-shaped set of edge weights per . If weight[i,j] is non-zero when adj_matrix[i,j] = 0
+            this weight is ignored. 
+            
+            if weights == None, no weights are used
+        lam : float
+            lambda parameter of the model, which controls the relative influence of the graph vs expression loss functions. This term multiplies the expression loss, so smaller values of lambda upweight the prior information  
+        delta : float 
+            delta parameter of the model, which controls a lower bound for gene scaling factors. If delta is small then the maximum ratio between gene scaling factors is larger and lowly expressed genes can be put on the same scale as highly expressed genes. 
+        kappa : float or NoneType
+            kappa controls the background rate of edges in the graph. if kappa is a float, kappa is fixed to the given float value. If kappa == None, then kappa is a parameter that is estimated from the data.  
+        rho : float or NoneType
+            rho controls the bakcground rate of non-edges in the graph. if rho is a float, rho is fixed to the given float value. If rho == None, then rho is a parameter that is estimated from the data. 
+        use_cell_types: bool 
+            use_cell_types is a Boolean variable that determines whether cell type labels are used to fit the model. If False, then parameters are initialized as nn.Parameter rather than as nn.ParameterDict with cell type keys that index nn.Parameter values
+        determinant_penalty : float
+            determinant penalty affects the selection parameters that are fit when L[cell_type] > K[cell_type]. A determinantally regularized selection parameter is fit with determinant penalty that encourages sparsity and diversity.  
+    Attributes
+        ----------
+        model.delta : delta parameter of the model
+
+        model.lam : lambda parameter of the model 
+       
+        model.determinant_penalty : determinant penalty of the model 
+ 
+        model.L : L parameter, either int, dict or OrderedDict() 
+
+        model.p : number of genes
+
+        model.n : number of cells 
+
+        model.use_cell_types : if True then cell types are considered, else cell types ignored. Affects the dimensions of the initialized parameters. 
+
+        model.kappa : if not kappa, nn.ParameterDict() if use_cell_types, else nn.Parameter(). If kappa is a float, it is fixed throughout training
+
+        model.rho : if not rho, nn.ParamterDict() if use_cell_types, else nn.Parameter. If rho is a float it is fixed throughout training
+
+        model.adj_matrix : adjacency matrix with diagonal removed. dict containing torch.Tensors 
+
+        model.adj_matrix_1m : 1 - adjacency matrix with diagonal removed. dict containing torch.Tensors 
+        
+        model.weights : contains edge weights. format matches adj_matrix 
+        
+        model.cell_types : np.ndarray containing array of unique cell types
+       
+        model.cell_type_counts : dict {key = cell type, values = number of cells}
+ 
+        model.factors : nn.ParameterDict() or nn.Parameter() containing the factor weights 
+
+        model.cell_scores : nn.ParameterDict() or nn.Parameter() containing the cell loadings
+
+        model.eta : nn.ParameterDict() or nn.Parameter() containing the interaction matrix between factors
+
+        model.gene_scaling : nn.ParameterDict() or nn.Parameter() containing the gene scale factors
+
+        model.selection :  nn.ParameterDict() or nn.Parameter() containing the attention weights. Only initialized when L[cell_type] > K[cell_type] for some cell type or when L > K and use_cell_types == False 
+        
+        
+
+    Methods
+        ----------
+
+        model.train(self, X, labels, lr_schedule,num_epochs, verbose) : 
+        model.save()
+        model.load()
+        model.initialize
+        model.return_selection()
+        model.return_eta_diag()
+        model.return_cell_scores()
+        model.return_factors() 
+        model.return_eta()
+        model.return_rho() 
+        model.return_kappa()
+        model.return_gene_scalings()
+        model.return_graph(ct = "global") : 
+        model.matching(markers, gene_names_dict, threshold = 0.4):
+
     """
     def __init__(self,X, labels,  L, vocab = None, gs_dict = None, use_weights = False, adj_matrix = None, weights = None, lam = 0.1, delta=0.1,kappa = None, rho = None, use_cell_types = True):
         self.L = L
@@ -937,16 +1051,50 @@ Public Functions
 """
 
 def est_spectra(adata, gene_set_dictionary, L = None,use_highly_variable = True, cell_type_key = None, use_weights = False, lam = 0.1, delta=0.1,kappa = None, rho = None, use_cell_types = True, n_top_vals = 50, **kwargs):
-    """
-    SPECTRA function that operates on AnnData objects, 
-
-
-    Returns
-    ________ 
-
-    SPECTRA_Model instance
+    """ 
     
-    store factors and cell scores in varm and obsm and markers in .uns 
+    Parameters
+        ----------
+        adata : AnnData object 
+            containing cell_type_key with log count data stored in .X
+        gene_set_dictionary : dict or OrderedDict() 
+            maps cell types to gene set names to gene sets ; if use_cell_types == False then maps gene set names to gene sets ; 
+            must contain "global" key in addition to every unique cell type under .obs.<cell_type_key>
+        L : dict, OrderedDict(), int , NoneType
+            number of factors per cell type ; if use_cell_types == False then int. Else dictionary. If None then match factors
+            to number of gene sets (recommended) 
+        use_highly_variable : bool 
+            if True, then uses highly_variable_genes
+        cell_type_key : str
+            cell type key, must be under adata.obs.<cell_type_key> . If use_cell_types == False, this is ignored
+        use_weights : bool
+            if True, edge weights are estimated based on graph structure and used throughout training
+        lam : float 
+            lambda parameter of the model. weighs relative contribution of graph and expression loss functions
+        delta : float
+            delta parameter of the model. lower bounds possible gene scaling factors so that maximum ratio of gene scalings
+            cannot be too large 
+        kappa : float or None
+            if None, estimate background rate of 1s in the graph from data
+        rho : float or None 
+            if None, estimate background rate of 0s in the graph from data
+        use_cell_types : bool
+            if True then cell type label is used to fit cell type specific factors. If false then cell types are ignored
+        n_top_vals : int
+            number of top markers to return in markers dataframe
+        determinant_penalty : float 
+            determinant penalty of the attention mechanism. If set higher than 0 then sparse solutions of the attention weights
+            and diverse attention weights are encouraged. However, tuning is crucial as setting too high reduces the selection 
+            accuracy because convergence to a hard selection occurs early during training [todo: annealing strategy]
+        **kwargs : (num_epochs = 10000, lr_schedule = [...], verbose = False)
+            arguments to .train(), maximum number of training epochs, learning rate schedule and whether to print changes in
+            learning rate
+            
+     Returns: SPECTRA_Model object [after training]
+     
+     In place: adds 1. factors, 2. cell scores, 3. vocabulary, and 4. markers as attributes in .obsm, .var, .uns   
+
+    
     """
     init_flag = False
 
