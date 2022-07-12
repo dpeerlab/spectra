@@ -37,13 +37,13 @@ Data used for the examples can be found here: [dropbox link to h5ad file](https:
 
 
 # Usage
-We start by importing spectra and a helper package that estimates the number of factors to use for spectra by a version of bulk eigenvalue matching analysis. In some cases, we can run spectra with number of factors equal to number of gene sets instead of estimating the number of factors. There are multiple ways to fit the model, but the simplest is to use the `est_spectra()` function in the `spectra` module. After determining the number of factors per cell type with `estimate_L` we can run this. The function modifies the AnnData object in place as well as returning a spectra model object that contains the entire set of fitted model parameters. 
+We start by importing spectra. The easiest way to run spectra is to use the `est_spectra` function in the `spectra` module, as shown below. The default behavior is to set the number of factors equal to the number of gene sets plus one. However, this can be modified by passing an integer e.g. `L = 20` as an argument to the function or a dictionary that maps cell type to an integer per cell type. We provide a method for estimating the number of factors directly from the data by bulk eigenvalue matching analysis, which is detailed further below. 
 ```
 from spectra import spectra as spc
 
 model = spc.est_spectra(adata = adata,  gene_set_dictionary = gene_set_dictionary, cell_type_key = "cell_type", use_highly_variable = True, lam = 0.01)
 ```
-This latter function stores three important quantities in the AnnData. Factors are the scores that tell you how much each gene contributes to each factor, while markers is an array of genes with top scores for every factor. Cell scores are similarly the score of each factor for every cell. Finally, vocab is a boolean array that is `True` for genes that were used while fitting the model - note that this quantity is only added to the AnnData when `highly_variable` is set to `True`  
+This function stores four important quantities in the AnnData, in addition to returning a fitted model object. Factors are the scores that tell you how much each gene contributes to each factor, while markers is an array of genes with top scores for every factor. Cell scores are similarly the score of each factor for every cell. Finally, vocab is a boolean array that is `True` for genes that were used while fitting the model - note that this quantity is only added to the AnnData when `highly_variable` is set to `True`  
 ```
 factors = adata.uns['SPECTRA_factors'] # factors x genes matrix that tells you how important each gene is to the resulting factors
 markers = adata.uns['SPECTRA_markers'] # factors x K [where K is a user specified number] list of K top markers per factor
