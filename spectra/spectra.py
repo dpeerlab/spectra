@@ -1032,7 +1032,13 @@ class SPECTRA_EM:
                     prev_nll = nll
         return
 
+    def initialize(self,gene_sets, val = 10):
+        ct = 0 
+        for gene_set in gene_sets:
+            self.theta[np.array(gene_set), ct] = val
+            ct = ct + 1
 
+        self.theta = self.theta/(self.theta.sum(axis = 1))
 
 
 """ 
