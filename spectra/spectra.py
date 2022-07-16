@@ -1040,6 +1040,17 @@ class SPECTRA_EM:
 
         self.theta = self.theta/(self.theta.sum(axis = 1))
 
+    def markers(self, offset, id2gene, n_top):
+        #compute marker weights
+        marker_weights = self.theta*(self.g + self.delta).reshape(-1,1) + offset
+        marker_weights = marker_weights/marker_weights.sum(axis = 1, keepdims = True) 
+
+        #print genes per factors
+        df = pd.DataFrame()
+        for j in range(self.K):
+            df["factor" + str(j)] = [id2gene[i] for i in np.argsort(marker_weights[:,j])[::-1][:n_top]]
+        return df
+
 
 """ 
 Public Functions 
