@@ -1038,7 +1038,7 @@ class SPECTRA_EM:
             self.theta[np.array(gene_set), ct] = val
             ct = ct + 1
 
-        self.theta = self.theta/(self.theta.sum(axis = 1))
+        self.theta = self.theta/(self.theta.sum(axis = 1, keepdims = True))
 
     def markers(self, offset, id2gene, n_top):
         #compute marker weights
