@@ -151,7 +151,7 @@ class BEMA:
             
         #update global parameters
         self.res_matrix = res_matrix
-        self.threshold = res_matrix[-1,int((1-self.beta)*M)]
+        self.threshold = np.array(sorted(res_matrix[-1,:]))[int((1-self.beta)*M)] 
         return sum(self.eigenvalues > self.threshold)
 
     def forward(self):
