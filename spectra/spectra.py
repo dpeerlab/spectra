@@ -1036,6 +1036,7 @@ class SPECTRA_EM:
         ct = 0 
         for gene_set in gene_sets:
             self.theta[np.array(gene_set), ct] = val
+            self.B[ct,ct] = 1.0
             ct = ct + 1
 
         self.theta = self.theta/(self.theta.sum(axis = 1, keepdims = True))
