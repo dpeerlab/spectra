@@ -18,7 +18,7 @@ from torch.distributions.log_normal import LogNormal
 from torch.distributions.dirichlet import Dirichlet
 
 ### Class for SPECTRA model 
-from initialization import * 
+from spectra.initialization import * 
 class SPECTRA(nn.Module): 
     """ 
     
