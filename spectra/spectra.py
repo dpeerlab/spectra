@@ -18,7 +18,7 @@ from torch.distributions.log_normal import LogNormal
 from torch.distributions.dirichlet import Dirichlet
 
 ### Class for SPECTRA model 
-
+from initialization import * 
 class SPECTRA(nn.Module): 
     """ 
     
@@ -727,35 +727,49 @@ class SPECTRA_Model:
         self.gene_scalings = (model.gene_scaling.exp().detach()/(1.0 + model.gene_scaling.exp().detach())).numpy()
         self.rho = (model.rho.exp().detach()/(1.0 + model.rho.exp().detach())).numpy()
         self.kappa = (model.kappa.exp().detach()/(1.0 + model.kappa.exp().detach())).numpy()
-    def initialize(self,annotations, word2id, val = 25):
+    def initialize(self,annotations, word2id, W, val = 25):
         """
         self.use_cell_types must be True
         create form of gene_sets:
         
         cell_type (inc. global) : set of sets of idxs
+        
+        filter based on L_ct
         """
         if self.use_cell_types:
+            init_scores = compute_init_scores(annotations, word2id, torch.Tensor(W)) 
             gs_dict = OrderedDict()
             for ct in annotations.keys():
+                mval = max(self.L[ct] - 1, 0) 
+                sorted_init_scores = sorted(init_scores[ct].items(), key=lambda x:x[1])
+                sorted_init_scores = sorted_init_scores[-1*mval:]
+                names = set([k[0] for k in sorted_init_scores])  
                 lst_ct = []
                 for key in annotations[ct].keys():
-                    words = annotations[ct][key]
+                    if key in names:
+                        words = annotations[ct][key]
+                        idxs = []
+                        for word in words:
+                            if word in word2id:
+                                idxs.append(word2id[word])
+                        lst_ct.append(idxs)
+                gs_dict[ct] = lst_ct
+            self.internal_model.initialize(gene_sets = gs_dict, val = val)
+        else:
+            init_scores = compute_init_scores_noct(annotations,word2id,torch.Tensor(W))
+            lst = []
+            mval = max(self.L - 1, 0)
+            sorted_init_scores = sorted(init_scores.items(), key = lambda x:x[1])
+            sorted_init_scores = sorted_init_scores[-1*mval:]
+            names = set([k[0] for k in sorted_init_scores])   
+            for key in annotations.keys():
+                if key in names:
+                    words = annotations[key]
                     idxs = []
                     for word in words:
                         if word in word2id:
                             idxs.append(word2id[word])
-                    lst_ct.append(idxs)
-                gs_dict[ct] = lst_ct
-            self.internal_model.initialize(gene_sets = gs_dict, val = val)
-        else:
-            lst = []
-            for key in annotations.keys():
-                words = annotations[key]
-                idxs = []
-                for word in words:
-                    if word in word2id:
-                        idxs.append(word2id[word])
-                lst.append(idxs)
+                    lst.append(idxs)
             self.internal_model.initialize_no_celltypes(gs_list = lst, val = val)
     def return_eta_diag(self):
         return self.B_diag
@@ -1114,7 +1128,7 @@ def est_spectra(adata, gene_set_dictionary, L = None,use_highly_variable = True,
 
     
     """
-    init_flag = False
+    init_flag = True
 
     if L == None:
         init_flag = True
@@ -1167,12 +1181,7 @@ def est_spectra(adata, gene_set_dictionary, L = None,use_highly_variable = True,
 
     spectra = SPECTRA_Model(X = X, labels = labels,  L = L, vocab = vocab, gs_dict = gene_set_dictionary, use_weights = use_weights, lam = lam, delta=delta,kappa = kappa, rho = rho, use_cell_types = use_cell_types)
     if init_flag:
-        spectra.initialize(gene_set_dictionary, word2id)
-    else:
-        try:
-            spectra.initialize(gene_set_dictionary,word2id)
-        except AssertionError:
-            pass
+        spectra.initialize(gene_set_dictionary, word2id, X)
             
     spectra.train(X = X, labels = labels,**kwargs)
 
