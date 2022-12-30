@@ -96,7 +96,7 @@ out.show("test_graph.html")
 model.save("test_model")
 
 #initialize a model and load trained model, adata must be have the attributes stored by est_spectra
-model = load_from_pickle("test_model", adata, gene_set_dictionary, cell_type_key)
+model = spc.load_from_pickle("test_model", adata, gene_set_dictionary, cell_type_key)
 ```
 
 ## Fitting the model without AnnData
