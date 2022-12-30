@@ -1082,7 +1082,7 @@ Public Functions
 
 """
 
-def est_spectra(adata, gene_set_dictionary, L = None,use_highly_variable = True, cell_type_key = None, use_weights = False, lam = 0.1, delta=0.1,kappa = None, rho = None, use_cell_types = True, n_top_vals = 50, **kwargs):
+def est_spectra(adata, gene_set_dictionary, L = None,use_highly_variable = True, cell_type_key = None, use_weights = False, lam = 0.008, delta=0.001,kappa = None, rho = 0.001, use_cell_types = True, n_top_vals = 50, **kwargs):
     """ 
     
     Parameters
