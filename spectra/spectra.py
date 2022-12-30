@@ -1235,7 +1235,7 @@ def return_markers(factor_matrix, id2word,n_top_vals = 100):
     return df.values
 
 def load_from_pickle(fp, adata, gs_dict, cell_type_key):
-    model = spc.SPECTRA_Model(X = adata[:,adata.var["spectra_vocab"]].X, labels = np.array(adata.obs[cell_type_key]),  L = adata.uns["SPECTRA_L"], 
+    model = SPECTRA_Model(X = adata[:,adata.var["spectra_vocab"]].X, labels = np.array(adata.obs[cell_type_key]),  L = adata.uns["SPECTRA_L"], 
                           vocab = adata.var_names[adata.var["spectra_vocab"]], gs_dict = gs_dict)
     model.load(fp, labels = np.array(adata.obs[cell_type_key]))
     return(model)
