@@ -1172,13 +1172,15 @@ def est_spectra(adata, gene_set_dictionary, L = None,use_highly_variable = True,
     
     if cell_type_key is not None:
         labels = adata.obs[cell_type_key].values
+        for label in np.unique(labels):
+            if label not in gene_set_dictionary:
+                gene_set_dictionary[label] = {}
     else:
         labels = None 
     if type(X) == scipy.sparse.csr.csr_matrix:
         X = np.array(X.todense())
     word2id = dict((v, idx) for idx, v in enumerate(vocab))
     id2word = dict((idx, v) for idx, v in enumerate(vocab))
-
     spectra = SPECTRA_Model(X = X, labels = labels,  L = L, vocab = vocab, gs_dict = gene_set_dictionary, use_weights = use_weights, lam = lam, delta=delta,kappa = kappa, rho = rho, use_cell_types = use_cell_types)
     if init_flag:
         spectra.initialize(gene_set_dictionary, word2id, X)
@@ -1188,7 +1190,7 @@ def est_spectra(adata, gene_set_dictionary, L = None,use_highly_variable = True,
     adata.uns["SPECTRA_factors"] = spectra.factors
     adata.obsm["SPECTRA_cell_scores"] = spectra.cell_scores
     adata.uns["SPECTRA_markers"] = return_markers(factor_matrix = spectra.factors, id2word = id2word, n_top_vals = n_top_vals)
-
+    adata.uns["SPECTRA_L"] = L
     return spectra
 
 def return_markers(factor_matrix, id2word,n_top_vals = 100):
@@ -1199,8 +1201,11 @@ def return_markers(factor_matrix, id2word,n_top_vals = 100):
             df.iloc[i,j] = id2word[idx_matrix[i,j]]
     return df.values
 
-
-
+def load_from_pickle(fp, adata, gs_dict, cell_type_key):
+    model = spc.SPECTRA_Model(X = adata[:,adata.var["spectra_vocab"]].X, labels = np.array(adata.obs[cell_type_key]),  L = adata.uns["SPECTRA_L"], 
+                          vocab = adata.var_names[adata.var["spectra_vocab"]], gs_dict = gs_dict)
+    model.load(fp, labels = np.array(adata.obs[cell_type_key]))
+    return(model)
 
 def graph_network(adata, mat, gene_set,thres = 0.20, N = 50):
     
