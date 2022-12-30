@@ -95,9 +95,8 @@ out.show("test_graph.html")
 #save trained model
 model.save("test_model")
 
-#initialize a model and load trained model
-model = spc.SPECTRA_Model(X = X, labels = labels,  L = L, vocab = vocab, gs_dict = gene_set_dictionary)
-model.load("test_model",labels = labels) 
+#initialize a model and load trained model, adata must be have the attributes stored by est_spectra
+model = load_from_pickle("test_model", adata, gene_set_dictionary, cell_type_key)
 ```
 
 ## Fitting the model without AnnData
@@ -110,6 +109,10 @@ It is also required to run the model this way if you want to input arbitrary adj
 ```
 model = spc.SPECTRA_Model(X = X, labels = labels,  L = L, adj_matrix = adj_matrix, weights = weights, lam = lam, delta=delta,kappa = kappa, rho = rho, use_cell_types = use_cell_types)
 model.train(X = X, labels = labels,**kwargs)
+
+#instead of training, load a pretrained model
+model = spc.SPECTRA_Model(X = X, labels = labels,  L = L, adj_matrix = adj_matrix, weights = weights, lam = lam, delta=delta,kappa = kappa, rho = rho, use_cell_types = use_cell_types)
+model.load("test_model",labels = labels) 
 ```
 
 ## Estimating the number of factors
