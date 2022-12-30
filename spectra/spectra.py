@@ -727,7 +727,7 @@ class SPECTRA_Model:
         self.gene_scalings = (model.gene_scaling.exp().detach()/(1.0 + model.gene_scaling.exp().detach())).numpy()
         self.rho = (model.rho.exp().detach()/(1.0 + model.rho.exp().detach())).numpy()
         self.kappa = (model.kappa.exp().detach()/(1.0 + model.kappa.exp().detach())).numpy()
-    def initialize(self,annotations, word2id, W, val = 25):
+    def initialize(self,annotations, word2id, W, init_scores, val = 25):
         """
         self.use_cell_types must be True
         create form of gene_sets:
@@ -737,7 +737,8 @@ class SPECTRA_Model:
         filter based on L_ct
         """
         if self.use_cell_types:
-            init_scores = compute_init_scores(annotations, word2id, torch.Tensor(W)) 
+            if init_scores == None:
+                init_scores = compute_init_scores(annotations, word2id, torch.Tensor(W)) 
             gs_dict = OrderedDict()
             for ct in annotations.keys():
                 mval = max(self.L[ct] - 1, 0) 
@@ -756,7 +757,8 @@ class SPECTRA_Model:
                 gs_dict[ct] = lst_ct
             self.internal_model.initialize(gene_sets = gs_dict, val = val)
         else:
-            init_scores = compute_init_scores_noct(annotations,word2id,torch.Tensor(W))
+            if init_scores == None:
+                init_scores = compute_init_scores_noct(annotations,word2id,torch.Tensor(W))
             lst = []
             mval = max(self.L - 1, 0)
             sorted_init_scores = sorted(init_scores.items(), key = lambda x:x[1])
@@ -771,6 +773,7 @@ class SPECTRA_Model:
                             idxs.append(word2id[word])
                     lst.append(idxs)
             self.internal_model.initialize_no_celltypes(gs_list = lst, val = val)
+        
     def return_eta_diag(self):
         return self.B_diag
     def return_cell_scores(self):
@@ -1082,7 +1085,7 @@ Public Functions
 
 """
 
-def est_spectra(adata, gene_set_dictionary, L = None,use_highly_variable = True, cell_type_key = None, use_weights = False, lam = 0.008, delta=0.001,kappa = None, rho = 0.001, use_cell_types = True, n_top_vals = 50, **kwargs):
+def est_spectra(adata, gene_set_dictionary, L = None,use_highly_variable = True, cell_type_key = None, use_weights = False, lam = 0.008, delta=0.001,kappa = None, rho = 0.001, use_cell_types = True, n_top_vals = 50, filter_sets = True, **kwargs):
     """ 
     
     Parameters
@@ -1118,6 +1121,8 @@ def est_spectra(adata, gene_set_dictionary, L = None,use_highly_variable = True,
             determinant penalty of the attention mechanism. If set higher than 0 then sparse solutions of the attention weights
             and diverse attention weights are encouraged. However, tuning is crucial as setting too high reduces the selection 
             accuracy because convergence to a hard selection occurs early during training [todo: annealing strategy]
+        filter_sets : bool 
+            whether to filter the gene sets based on coherence
         **kwargs : (num_epochs = 10000, lr_schedule = [...], verbose = False)
             arguments to .train(), maximum number of training epochs, learning rate schedule and whether to print changes in
             learning rate
@@ -1128,7 +1133,7 @@ def est_spectra(adata, gene_set_dictionary, L = None,use_highly_variable = True,
 
     
     """
-    init_flag = True
+    
 
     if L == None:
         init_flag = True
@@ -1181,10 +1186,38 @@ def est_spectra(adata, gene_set_dictionary, L = None,use_highly_variable = True,
         X = np.array(X.todense())
     word2id = dict((v, idx) for idx, v in enumerate(vocab))
     id2word = dict((idx, v) for idx, v in enumerate(vocab))
+    
+    if filter_sets:
+        if use_cell_types:
+            new_gs_dict = {}
+            init_scores = compute_init_scores(gene_set_dictionary,word2id, torch.Tensor(X))
+            for ct in gene_set_dictionary.keys():
+                new_gs_dict[ct] = {}
+                mval = max(L[ct] - 1, 0) 
+                sorted_init_scores = sorted(init_scores[ct].items(), key=lambda x:x[1])
+                sorted_init_scores = sorted_init_scores[-1*mval:]
+                names = set([k[0] for k in sorted_init_scores]) 
+                for key in gene_set_dictionary[ct].keys():
+                    if key in names:
+                        new_gs_dict[ct][key] = gene_set_dictionary[ct][key]
+        else:
+            init_scores = compute_init_scores(gene_set_dictionary, word2id, torch.Tensor(X))
+            new_gs_dict = {}
+            mval = max(L - 1, 0) 
+            sorted_init_scores = sorted(init_scores.items(), key=lambda x:x[1])
+            sorted_init_scores = sorted_init_scores[-1*mval:]
+            names = set([k[0] for k in sorted_init_scores])
+            for key in gene_set_dictionary[ct].keys():
+                if key in names:
+                    new_gs_dict[key] = gene_set_dictionary[key]
+        gene_set_dictionary = new_gs_dict
+    else:
+        init_scores = None
+   
     spectra = SPECTRA_Model(X = X, labels = labels,  L = L, vocab = vocab, gs_dict = gene_set_dictionary, use_weights = use_weights, lam = lam, delta=delta,kappa = kappa, rho = rho, use_cell_types = use_cell_types)
-    if init_flag:
-        spectra.initialize(gene_set_dictionary, word2id, X)
-            
+    
+    spectra.initialize(gene_set_dictionary, word2id, X, init_scores)
+
     spectra.train(X = X, labels = labels,**kwargs)
 
     adata.uns["SPECTRA_factors"] = spectra.factors
