@@ -1180,6 +1180,8 @@ def est_spectra(adata, gene_set_dictionary, L = None,use_highly_variable = True,
         for label in np.unique(labels):
             if label not in gene_set_dictionary:
                 gene_set_dictionary[label] = {}
+            if label not in L:
+                L[label] = 1 
     else:
         labels = None 
     if type(X) == scipy.sparse.csr.csr_matrix:
