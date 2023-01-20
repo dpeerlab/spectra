@@ -32,8 +32,16 @@ cd spectra
 pip install . 
 
 ```
+
+# Tutorial
+
+We provide a full tutorial how to run the basic Spectra model here:
+
+https://github.com/dpeerlab/spectra/notebooks/example_notebook.ipynb
+
+
 # Example Data Download:
-Data used for the examples can be found here: [dropbox link to h5ad file](https://www.dropbox.com/s/jm49egj7lhe83fe/Bassez_10k_subset_scran.h5ad?dl=0) . This is a subsetted version of the Bassez et al. Nature Medicine (https://doi.org/10.1038/s41591-021-01323-8) preprocessed by scran and emptydrops with annotated cell types at various resolutions.
+Data used for the examples can be found in the data folder of this package (see tutorial notebook): This is a subsetted version of the Bassez et al. Nature Medicine (https://doi.org/10.1038/s41591-021-01323-8) preprocessed by scran and emptydrops with annotated cell types.
 
 
 # Usage
