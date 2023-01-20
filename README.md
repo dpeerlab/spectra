@@ -1,3 +1,4 @@
+# Spectra - Supervised discovery of interpretable gene programs from single-cell data
 
 ![alt text](img/spectra_img.png?raw=true)
 
