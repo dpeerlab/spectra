@@ -37,11 +37,11 @@ pip install .
 
 We provide a full tutorial how to run the basic Spectra model here:
 
-https://github.com/dpeerlab/spectra/notebooks/example_notebook.ipynb
+https://github.com/dpeerlab/spectra/blob/main/notebooks/example_notebook.ipynb
 
 
 # Example Data Download:
-Data used for the examples can be found in the data folder of this package (see tutorial notebook): This is a subsetted version of the Bassez et al. Nature Medicine (https://doi.org/10.1038/s41591-021-01323-8) preprocessed by scran and emptydrops with annotated cell types.
+Data used for the examples can be found in the data folder of this package (https://github.com/dpeerlab/spectra/tree/main/data): This is a subsetted version of the Bassez et al. Nature Medicine (https://doi.org/10.1038/s41591-021-01323-8) preprocessed by scran and emptydrops with annotated cell types.
 
 
 # Usage
