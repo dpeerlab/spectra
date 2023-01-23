@@ -1175,7 +1175,7 @@ def est_spectra(adata, gene_set_dictionary, L = None,use_highly_variable = True,
         X = adata.X
         vocab = adata.var_names 
     
-    if cell_type_key is not None:
+    if use_cell_types:
         labels = adata.obs[cell_type_key].values
         for label in np.unique(labels):
             if label not in gene_set_dictionary:
