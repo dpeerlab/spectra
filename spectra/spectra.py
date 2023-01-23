@@ -1203,7 +1203,7 @@ def est_spectra(adata, gene_set_dictionary, L = None,use_highly_variable = True,
                     if key in names:
                         new_gs_dict[ct][key] = gene_set_dictionary[ct][key]
         else:
-            init_scores = compute_init_scores(gene_set_dictionary, word2id, torch.Tensor(X))
+            init_scores = compute_init_scores_noct(gene_set_dictionary, word2id, torch.Tensor(X))
             new_gs_dict = {}
             mval = max(L - 1, 0) 
             sorted_init_scores = sorted(init_scores.items(), key=lambda x:x[1])
