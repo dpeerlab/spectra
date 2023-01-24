@@ -1209,7 +1209,7 @@ def est_spectra(adata, gene_set_dictionary, L = None,use_highly_variable = True,
             sorted_init_scores = sorted(init_scores.items(), key=lambda x:x[1])
             sorted_init_scores = sorted_init_scores[-1*mval:]
             names = set([k[0] for k in sorted_init_scores])
-            for key in gene_set_dictionary[ct].keys():
+            for key in gene_set_dictionary.keys():
                 if key in names:
                     new_gs_dict[key] = gene_set_dictionary[key]
         gene_set_dictionary = new_gs_dict
