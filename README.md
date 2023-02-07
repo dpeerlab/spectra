@@ -42,6 +42,10 @@ https://github.com/dpeerlab/spectra/blob/main/notebooks/Spectra_Colaboratory_tut
 
 You can run this tutorial on the Google Colaboratory.
 
+You can use log1p transformed median library size normalized data. Most benchmarks have been performed using scran normalization (https://doi.org/10.1186/s13059-016-0947-7). You can find a tutorial how to prepare your data for scran here:
+
+https://github.com/dpeerlab/spectra/blob/main/notebooks/scran_preprocessing.ipynb
+
 # Example Data Download:
 Data used for the examples can be found in the data folder of this package (https://github.com/dpeerlab/spectra/tree/main/data): This is a subsetted version of the Bassez et al. Nature Medicine (https://doi.org/10.1038/s41591-021-01323-8) preprocessed by scran and emptydrops with annotated cell types.
 
