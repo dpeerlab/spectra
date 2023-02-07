@@ -46,6 +46,8 @@ You can use log1p transformed median library size normalized data. Most benchmar
 
 https://github.com/dpeerlab/spectra/blob/main/notebooks/scran_preprocessing.ipynb
 
+An R script to run scran can be found in the preprocessing folder of this repository.
+
 # Example Data Download:
 Data used for the examples can be found in the data folder of this package (https://github.com/dpeerlab/spectra/tree/main/data): This is a subsetted version of the Bassez et al. Nature Medicine (https://doi.org/10.1038/s41591-021-01323-8) preprocessed by scran and emptydrops with annotated cell types.
 
