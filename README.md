@@ -40,6 +40,9 @@ We provide a full tutorial how to run the basic Spectra model here:
 
 https://github.com/dpeerlab/spectra/blob/main/notebooks/example_notebook.ipynb
 
+We also provide a short tutorial on Google Colaboratory:
+
+https://github.com/dpeerlab/spectra/blob/main/notebooks/Spectra_Colaboratory_tutorial.ipynb
 
 # Example Data Download:
 Data used for the examples can be found in the data folder of this package (https://github.com/dpeerlab/spectra/tree/main/data): This is a subsetted version of the Bassez et al. Nature Medicine (https://doi.org/10.1038/s41591-021-01323-8) preprocessed by scran and emptydrops with annotated cell types.
