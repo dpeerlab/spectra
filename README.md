@@ -1,3 +1,4 @@
+# Spectra - Supervised discovery of interpretable gene programs from single-cell data
 
 ![alt text](img/spectra_img.png?raw=true)
 
@@ -32,8 +33,16 @@ cd spectra
 pip install . 
 
 ```
+
+# Tutorial
+
+We provide a full tutorial how to run the basic Spectra model here:
+
+https://github.com/dpeerlab/spectra/blob/main/notebooks/example_notebook.ipynb
+
+
 # Example Data Download:
-Data used for the examples can be found here: [dropbox link to h5ad file](https://www.dropbox.com/s/jm49egj7lhe83fe/Bassez_10k_subset_scran.h5ad?dl=0) . This is a subsetted version of the Bassez et al. Nature Medicine (https://doi.org/10.1038/s41591-021-01323-8) preprocessed by scran and emptydrops with annotated cell types at various resolutions.
+Data used for the examples can be found in the data folder of this package (https://github.com/dpeerlab/spectra/tree/main/data): This is a subsetted version of the Bassez et al. Nature Medicine (https://doi.org/10.1038/s41591-021-01323-8) preprocessed by scran and emptydrops with annotated cell types.
 
 
 # Usage
@@ -95,9 +104,8 @@ out.show("test_graph.html")
 #save trained model
 model.save("test_model")
 
-#initialize a model and load trained model
-model = spc.SPECTRA_Model(X = X, labels = labels,  L = L, vocab = vocab, gs_dict = gene_set_dictionary)
-model.load("test_model",labels = labels) 
+#initialize a model and load trained model, adata must be have the attributes stored by est_spectra
+model = spc.load_from_pickle("test_model", adata, gene_set_dictionary, cell_type_key)
 ```
 
 ## Fitting the model without AnnData
@@ -110,6 +118,10 @@ It is also required to run the model this way if you want to input arbitrary adj
 ```
 model = spc.SPECTRA_Model(X = X, labels = labels,  L = L, adj_matrix = adj_matrix, weights = weights, lam = lam, delta=delta,kappa = kappa, rho = rho, use_cell_types = use_cell_types)
 model.train(X = X, labels = labels,**kwargs)
+
+#instead of training, load a pretrained model
+model = spc.SPECTRA_Model(X = X, labels = labels,  L = L, adj_matrix = adj_matrix, weights = weights, lam = lam, delta=delta,kappa = kappa, rho = rho, use_cell_types = use_cell_types)
+model.load("test_model",labels = labels) 
 ```
 
 ## Estimating the number of factors

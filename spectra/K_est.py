@@ -58,7 +58,7 @@ class BEMA:
     
     """
     def __init__(self, n, p, eigenvalues, alpha = 0.2, beta = 0.1, M = 100, B = 10): 
-        assert(min(n,p) == len(eigenvalues))
+        #assert(min(n,p) == len(eigenvalues))
 
         self.eigenvalues = np.array(sorted(eigenvalues))#cast to np.array and sort
         self.p = p
@@ -69,7 +69,7 @@ class BEMA:
         self.M = M 
         self.beta = beta
         self.B = B 
-
+        self.eigenvalues = self.eigenvalues[-1*self.p_tilde:]
     def getQT(self, theta, B):
         """ 
         getQT function gets the quantiles
