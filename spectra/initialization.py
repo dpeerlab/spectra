@@ -29,7 +29,11 @@ def compute_init_scores_noct(gs_dict, word2id, W):
     keys = list(gs_dict.keys()) 
     for key in keys: 
         gs = gs_dict[key] 
-        idxs = [word2id[word] for word in gs] 
+        idxs = [] 
+        for word in gs:
+            if word in word2id:
+                idxs.append(word2id[word])
+        #idxs = [word2id[word] for word in gs] 
         coh = mimno_coherence_2011(idxs,W)
         init_scores[key] = coh.item() 
     return init_scores
@@ -43,7 +47,11 @@ def compute_init_scores(gs_dict, word2id, W):
             init_scores[key] = OrderedDict() 
             for inner_key in inner_keys:
                 gs = gs_dict[key][inner_key]
-                idxs = [word2id[word] for word in gs]
+                idxs = [] 
+                for word in gs: 
+                    if word in word2id:
+                        idxs.append(word2id[word])
+                #idxs = [word2id[word] for word in gs]
                 coh = mimno_coherence_2011(idxs, W)
                 init_scores[key][inner_key] = coh.item() 
         else: 
