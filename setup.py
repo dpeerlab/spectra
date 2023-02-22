@@ -5,7 +5,7 @@ setup(
     name='spectra',
     version='0.1.0',
     packages=find_packages(),
-    data_files={"spectra/data": ["data/*"]},
+    data_files=[("spectra/data", ["data/*"])],
     install_requires = [
         'numpy>=1.20.3',
         'scipy>=1.7.3',
