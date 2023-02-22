@@ -4,6 +4,7 @@ from setuptools import setup, find_packages
 setup(
     name='spectra',
     version='0.1.0',
+    packages=find_packages(),
     data_files=[("spectra/data", ["data/Spectra_dict.json"])],
     install_requires = [
         'numpy>=1.20.3',
