@@ -329,8 +329,8 @@ class SPECTRA(nn.Module):
         assert(self.use_cell_types) #if this is False, fail because model has not been initialized to use cell types
         
         #convert inputs to torch.Tensors
-        X = torch.Tensor(X).to(device)
-        alpha_mask = alpha_mask.to(device)
+        #X = torch.Tensor(X).to(device)
+        #alpha_mask = alpha_mask.to(device)
         # creat the weird softmax theta 
         theta = torch.cat([temp.softmax(dim = 1) for temp in torch.split(self.theta, split_size_or_sections = self.L_list, dim = 1)], dim = 1)
         #initialize loss and fetch global parameters
@@ -518,19 +518,19 @@ class SPECTRA_Model:
         opt = torch.optim.Adam(self.internal_model.parameters(), lr=lr_schedule[0])
         counter = 0
         last = np.inf
-
+        device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
         if (self.internal_model.use_cell_types == False):
             raise NotImplementedError("use_cell_types == False is not yet supported")
         for i in tqdm(range(num_epochs)):
             #At the beginning of epoch, get local parameters and batch them in random order  
-            to_batch = [X, self.internal_model.alpha_mask, self.internal_model.alpha]
+            to_batch = [torch.Tensor(X), self.internal_model.alpha_mask, self.internal_model.alpha]
             batches = batchify(to_batch, batch_size)
             X_b, alpha_mask_b, alpha_b = batches[0], batches[1], batches[2]
 
             tot = 0 
             for j in range(len(X_b)):
                 opt.zero_grad()
-                loss = self.internal_model.loss(X_b[j], alpha_mask_b[j], alpha_b[j], batch_size) 
+                loss = self.internal_model.loss(X_b[j].to(device), alpha_mask_b[j].to(device), alpha_b[j], batch_size) 
                 loss.backward()
                 opt.step()
                 tot += loss.item()
