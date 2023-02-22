@@ -268,7 +268,7 @@ class SPECTRA(nn.Module):
         self.n_cell_typesp1 = len(ct_order)
         
         #just need to construct these masks once
-        self.alpha_mask = torch.zeros((self.n,self.L_tot)).to(device)
+        self.alpha_mask = torch.zeros((self.n,self.L_tot))
         self.B_mask = torch.zeros((self.n_cell_typesp1, self.L_tot, self.L_tot)).to(device) #need to double check that this works
         self.factor_to_celltype = torch.zeros((self.L_tot, self.n_cell_typesp1)).to(device)
 
