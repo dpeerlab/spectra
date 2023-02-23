@@ -5,7 +5,9 @@ setup(
     name='spectra',
     version='0.1.0',
     packages=find_packages(),
-    data_files=[("spectra/data", ["data/Spectra_dict.json"])],
+    package_data={
+        "spectra": ["data/*"],
+    },
     install_requires = [
         'numpy>=1.20.3',
         'scipy>=1.7.3',
@@ -15,5 +17,4 @@ setup(
         'pandas>=1.3.5',
         'tqdm>=4.62.3',
         'pyvis>=0.1.9']
-        
 )
