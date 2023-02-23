@@ -268,7 +268,7 @@ class SPECTRA(nn.Module):
         self.n_cell_typesp1 = len(ct_order)
         
         #just need to construct these masks once
-        self.alpha_mask = torch.zeros((self.n,self.L_tot))
+        self.alpha_mask = torch.zeros((self.n,self.L_tot)).to(device)
         self.B_mask = torch.zeros((self.n_cell_typesp1, self.L_tot, self.L_tot)).to(device) #need to double check that this works
         self.factor_to_celltype = torch.zeros((self.L_tot, self.n_cell_typesp1)).to(device)
 
@@ -284,9 +284,9 @@ class SPECTRA(nn.Module):
         if rho == None:
             self.rho = nn.Parameter(Normal(0.,1.).sample([self.n_cell_typesp1]))       
         if kappa != None: 
-            self.kappa = torch.ones((self.n_cell_typesp1))*torch.tensor(np.log(kappa /(1-kappa)))
+            self.kappa = (torch.ones((self.n_cell_typesp1))*torch.tensor(np.log(kappa /(1-kappa)))).to(device)
         if rho != None: 
-            self.rho =  torch.ones((self.n_cell_typesp1))*torch.tensor(np.log(rho /(1-rho)))
+            self.rho =  (torch.ones((self.n_cell_typesp1))*torch.tensor(np.log(rho /(1-rho)))).to(device)
         
         #make sure 
         if ct_order[0] != "global":
@@ -879,11 +879,12 @@ def est_spectra(adata, gene_set_dictionary, L = None,use_highly_variable = True,
         gene_set_dictionary = new_gs_dict
     else:
         init_scores = None
-   
+    print("Initializing model...")
     spectra = SPECTRA_Model(X = X, labels = labels,  L = L, vocab = vocab, gs_dict = gene_set_dictionary, use_weights = use_weights, lam = lam, delta=delta,kappa = kappa, rho = rho, use_cell_types = use_cell_types)
     spectra.internal_model.to(device)
+    print("CUDA memory: ", 1e-9*torch.cuda.memory_allocated(device=device))
     spectra.initialize(gene_set_dictionary, word2id, X, init_scores)
-
+    print("Beginning training...")
     spectra.train(X = X, labels = labels,**kwargs)
 
     adata.uns["SPECTRA_factors"] = spectra.factors
