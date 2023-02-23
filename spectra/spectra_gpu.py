@@ -582,12 +582,12 @@ class SPECTRA_Model:
         #compute the loading matrix
 
         k = model.L_tot 
-        out = (torch.exp(model.alpha)*model.alpha_mask).detach().numpy()
+        out = (torch.exp(model.alpha)*model.alpha_mask).detach().cpu().numpy()
         theta = torch.cat([temp.softmax(dim = 1) for temp in torch.split(model.theta, split_size_or_sections = model.L_list, dim = 1)], dim = 1)
 
         gene_scaling = model.gene_scalings.exp()/(1.0 + model.gene_scalings.exp())
         gene_scaling_ = contract('ij,ki->jk',gene_scaling, model.factor_to_celltype) #p x L_tot
-        scaled = (theta * (gene_scaling_ + model.delta)).T.detach().numpy()
+        scaled = (theta * (gene_scaling_ + model.delta)).T.detach().cpu().numpy()
 
         new_factors = scaled/(scaled.sum(axis = 0,keepdims =True) + 1.0)
         cell_scores = out*scaled.mean(axis = 1).reshape(1,-1) 
@@ -597,16 +597,16 @@ class SPECTRA_Model:
         self.factors = new_factors
         self.B_diag = self.__B_diag()
         self.eta_matrices = self.__eta_matrices()
-        self.gene_scalings = {ct : gene_scaling[i] for i, ct in enumerate(model.ct_order)}
-        self.rho = {ct: model.rho[i].exp().detach().numpy()/(1.0 + model.rho[i].exp().detach().numpy()) for i, ct in enumerate(model.ct_order)}
-        self.kappa = {ct: model.kappa[i].exp().detach().numpy()/(1.0 + model.kappa[i].exp().detach().numpy()) for i, ct in enumerate(model.ct_order)}
+        self.gene_scalings = {ct : gene_scaling[i].detach().cpu().numpy() for i, ct in enumerate(model.ct_order)}
+        self.rho = {ct: model.rho[i].exp().detach().cpu().numpy()/(1.0 + model.rho[i].exp().detach().cpu().numpy()) for i, ct in enumerate(model.ct_order)}
+        self.kappa = {ct: model.kappa[i].exp().detach().cpu().numpy()/(1.0 + model.kappa[i].exp().detach().cpu().numpy()) for i, ct in enumerate(model.ct_order)}
 
     def __B_diag(self):
         model = self.internal_model
         
         Bg = model.eta.exp()/(1.0 + model.eta.exp())
         Bg = 0.5*(Bg + Bg.T)
-        B = torch.diag(Bg).detach().numpy()
+        B = torch.diag(Bg).detach().cpu().numpy()
         return B
 
     def __eta_matrices(self):
@@ -616,7 +616,7 @@ class SPECTRA_Model:
         Bg = 0.5*(Bg + Bg.T)
 
         for ct in model.ct_order:
-            eta[ct] = Bg[model.start_pos[ct]: model.start_pos[ct] +model.L[ct], model.start_pos[ct]: model.start_pos[ct] +model.L[ct]].detach().numpy()
+            eta[ct] = Bg[model.start_pos[ct]: model.start_pos[ct] +model.L[ct], model.start_pos[ct]: model.start_pos[ct] +model.L[ct]].detach().cpu().numpy()
         return eta 
 
 
