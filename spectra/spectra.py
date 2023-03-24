@@ -1167,7 +1167,7 @@ def est_spectra(adata, gene_set_dictionary, L = None,use_highly_variable = True,
     bools = np.array(bools)
 
     if use_highly_variable:
-        idx_to_use = bools | adata.var.highly_variable #take intersection of highly variable and gene set genes (todo: add option to change this at some point)
+        idx_to_use = bools | adata.var.highly_variable #take union of highly variable and gene set genes (todo: add option to change this at some point)
         X = adata.X[:,idx_to_use] 
         vocab = adata.var_names[idx_to_use]
         adata.var["spectra_vocab"] = idx_to_use
