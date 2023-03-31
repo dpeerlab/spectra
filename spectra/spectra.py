@@ -1085,7 +1085,73 @@ Public Functions
 
 """
 
-def est_spectra(adata, gene_set_dictionary, L = None,use_highly_variable = True, cell_type_key = None, use_weights = True, lam = 0.008, delta=0.001,kappa = None, rho = 0.05, use_cell_types = True, n_top_vals = 50, filter_sets = True, **kwargs):
+def get_factor_celltypes(adata, obs_key, cellscore):
+    '''
+    Assigns Spectra factors to cell types by analyzing the factor cell scores.
+    Cell type specific factors will have zero cell scores except in their respective cell type
+    
+    adata: AnnData , object containing the Spectra output
+    obs_key: str , column name in adata.obs containing the cell type annotations
+    cellscore_obsm_key: str , key for adata.obsm containing the Spectra cell scores
+    
+    returns: dict , dictionary of {factor index : 'cell type'}
+    '''
+    
+    #get cellscores
+    cell_scores_df = pd.DataFrame(cellscore)
+    cell_scores_df['celltype'] = list(adata.obs[obs_key])
+    
+    #find global and cell type specific fators
+    global_factors_series = (cell_scores_df.groupby('celltype').mean() !=0).all()
+    global_factors = [factor for factor in global_factors_series.index if global_factors_series[factor]]
+    specific_cell_scores = (cell_scores_df.groupby('celltype').mean()).T[~global_factors_series].T
+    specific_factors = {}
+    
+    for i in set(cell_scores_df['celltype']):
+        specific_factors[i]=[factor for factor in specific_cell_scores.loc[i].index if specific_cell_scores.loc[i,factor]]
+    
+    #inverse dict factor:celltype
+    factors_inv = {}
+    for i,v in specific_factors.items():
+        for factor in v:
+            factors_inv[factor]=i
+    
+    #add global
+
+    for factor in global_factors:
+        factors_inv[factor]= 'global'
+            
+    return factors_inv
+
+
+def label_marker_genes(marker_genes, gs_label_dict, threshold = 0.4):
+    '''
+    label an array of marker genes using the gene_set_dictionary in est_spectra
+    returns a dataframe of overlap coefficients for each gene set annotation and marker gene
+    marker_genes: array factors x marker genes or a KnowledgeBase object
+    label an array containing marker genes by its overlap with a dictionary of gene sets from the knowledge base:
+    KnowledgeBase.celltype_process_dict
+    '''
+
+   
+    gs_dict = gs_label_dict
+    overlap_df = pd.DataFrame()
+    for i, v in pd.DataFrame(marker_genes).T.iteritems():
+        for gs_name, gs in gs_dict.items():
+            overlap_df.loc[i,gs_name] =  overlap_coefficient(set(gs),set(v))
+    marker_gene_labels = [] #gene sets
+    for marker_set in overlap_df.index:
+        max_overlap = overlap_df.loc[marker_set].sort_values().index[-1]
+        if overlap_df.loc[marker_set].sort_values().values[-1] >threshold:
+            marker_gene_labels.append(max_overlap)
+        else:
+            marker_gene_labels.append(marker_set)
+    overlap_df.index = marker_gene_labels     
+    marker_dict = {key:value for key,value in enumerate(marker_gene_labels)}    
+    return overlap_df, marker_dict
+
+def est_spectra(adata, gene_set_dictionary, L = None,use_highly_variable = True, cell_type_key = None, use_weights = True, lam = 0.008, delta=0.001,kappa = None, rho = 0.05, use_cell_types = True, n_top_vals = 50, 
+filter_sets = True, label_factors=True, overlap_threshold= 0.4 **kwargs):
     """ 
     
     Parameters
@@ -1123,13 +1189,18 @@ def est_spectra(adata, gene_set_dictionary, L = None,use_highly_variable = True,
             accuracy because convergence to a hard selection occurs early during training [todo: annealing strategy]
         filter_sets : bool 
             whether to filter the gene sets based on coherence
+        label_factors : bool
+            whether to label the factors by their cell type specificity and their overlap coefficient with the input marker genes
+        overlap_threshold: float
+            minimum overlap coefficient to assign an input gene set label to a factor
+
         **kwargs : (num_epochs = 10000, lr_schedule = [...], verbose = False)
             arguments to .train(), maximum number of training epochs, learning rate schedule and whether to print changes in
             learning rate
             
      Returns: SPECTRA_Model object [after training]
      
-     In place: adds 1. factors, 2. cell scores, 3. vocabulary, and 4. markers as attributes in .obsm, .var, .uns   
+     In place: adds 1. factors, 2. cell scores, 3. vocabulary, 4. markers, 5. overlap coefficient of markers vs input gene sets as attributes in .obsm, .var, .uns   
 
     
     """
@@ -1223,9 +1294,26 @@ def est_spectra(adata, gene_set_dictionary, L = None,use_highly_variable = True,
     spectra.train(X = X, labels = labels,**kwargs)
 
     adata.uns["SPECTRA_factors"] = spectra.factors
-    adata.obsm["SPECTRA_cell_scores"] = spectra.cell_scores
     adata.uns["SPECTRA_markers"] = return_markers(factor_matrix = spectra.factors, id2word = id2word, n_top_vals = n_top_vals)
     adata.uns["SPECTRA_L"] = L
+
+    #label factors
+    if label_factors:
+        #get cell type specificity of every factor
+        celltype_dict = get_factor_celltypes(adata, cell_type_key, cellscores=spectra.cell_scores)
+        max_celltype = [celltype_dict[x] for x in range(spectra.cell_scores.shape[1])]
+        #get gene set with maximum overlap coefficient with top marker genes
+        max_gene_set, overlap_df = label_marker_genes(adata.uns["SPECTRA_markers"] , gene_set_dictionary, threshold = overlap_threshold):
+        column_labels = [str(x) + '-X-' + max_celltype + '-X-' + max_gene_set]
+        cell_scores = pd.DataFrame(spectra.cell_scores, 
+                                    index= adata.obs_names,
+                                    columns=column_labels)
+        #pandas.DataFrame of input gene sets vs factor marker genes overlap coefficients
+        adata.uns["SPECTRA_overlap"] = overlap_df
+    else:
+        adata.obsm["SPECTRA_cell_scores"] = spectra.cell_scores
+
+    
     return spectra
 
 def return_markers(factor_matrix, id2word,n_top_vals = 100):
