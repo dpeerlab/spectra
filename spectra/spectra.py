@@ -1138,7 +1138,7 @@ def label_marker_genes(marker_genes, gs_label_dict, threshold = 0.4):
     overlap_df = pd.DataFrame()
     for i, v in pd.DataFrame(marker_genes).T.iteritems():
         for gs_name, gs in gs_dict.items():
-            overlap_df.loc[i,gs_name] =  overlap_coefficient(set(gs),set(v))
+            overlap_df.loc[i,gs_name] =  spectra_util.overlap_coefficient(set(gs),set(v))
     marker_gene_labels = [] #gene sets
     for marker_set in overlap_df.index:
         max_overlap = overlap_df.loc[marker_set].sort_values().index[-1]
