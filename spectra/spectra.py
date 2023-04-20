@@ -1303,12 +1303,21 @@ filter_sets = True, label_factors=True, overlap_threshold= 0.4, **kwargs):
     adata.uns["SPECTRA_L"] = L
 
     #label factors
+
+    #transform input nested dictionary into a flat dictionary
+    gene_set_dictionary_flat = {}
+
+    for k,v in gene_set_dictionary.items():
+        for k2,v2 in v.items():
+            gene_set_dictionary_flat[k2] = v2
+
+    #labeling function
     if label_factors:
         #get cell type specificity of every factor
         celltype_dict = get_factor_celltypes(adata, cell_type_key, cellscore=spectra.cell_scores)
         max_celltype = [celltype_dict[x] for x in range(spectra.cell_scores.shape[1])]
         #get gene set with maximum overlap coefficient with top marker genes
-        max_gene_set, overlap_df = label_marker_genes(adata.uns["SPECTRA_markers"] , gene_set_dictionary, threshold = overlap_threshold)
+        max_gene_set, overlap_df = label_marker_genes(adata.uns["SPECTRA_markers"] , gene_set_dictionary_flat, threshold = overlap_threshold)
         column_labels = [str(x) + '-X-' + max_celltype + '-X-' + max_gene_set]
         cell_scores = pd.DataFrame(spectra.cell_scores, 
                                     index= adata.obs_names,
