@@ -1303,7 +1303,7 @@ filter_sets = True, label_factors=True, overlap_threshold= 0.4 **kwargs):
         celltype_dict = get_factor_celltypes(adata, cell_type_key, cellscores=spectra.cell_scores)
         max_celltype = [celltype_dict[x] for x in range(spectra.cell_scores.shape[1])]
         #get gene set with maximum overlap coefficient with top marker genes
-        max_gene_set, overlap_df = label_marker_genes(adata.uns["SPECTRA_markers"] , gene_set_dictionary, threshold = overlap_threshold):
+        max_gene_set, overlap_df = label_marker_genes(adata.uns["SPECTRA_markers"] , gene_set_dictionary, threshold = overlap_threshold)
         column_labels = [str(x) + '-X-' + max_celltype + '-X-' + max_gene_set]
         cell_scores = pd.DataFrame(spectra.cell_scores, 
                                     index= adata.obs_names,
