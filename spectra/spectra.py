@@ -1132,13 +1132,18 @@ def label_marker_genes(marker_genes, gs_label_dict, threshold = 0.4):
     label an array containing marker genes by its overlap with a dictionary of gene sets from the knowledge base:
     KnowledgeBase.celltype_process_dict
     '''
-
    
     gs_dict = gs_label_dict
     overlap_df = pd.DataFrame()
-    for i, v in pd.DataFrame(marker_genes).T.iteritems():
+    for i, v in pd.DataFrame(marker_genes).T.items():
+        overlap_temp = []
+        gs_names_temp = []
         for gs_name, gs in gs_dict.items():
-            overlap_df.loc[i,gs_name] =  spectra_util.overlap_coefficient(set(gs),set(v))
+            overlap_temp.append(spectra_util.overlap_coefficient(set(gs),set(v)))
+            gs_names_temp.append(gs_name)
+        overlap_df_temp = pd.DataFrame(overlap_temp, columns=[i],index=gs_names_temp).T
+        overlap_df = pd.concat([overlap_df,overlap_df_temp])
+    
     marker_gene_labels = [] #gene sets
     for marker_set in overlap_df.index:
         max_overlap = overlap_df.loc[marker_set].sort_values().index[-1]
