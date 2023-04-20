@@ -1329,6 +1329,8 @@ filter_sets = True, label_factors=True, overlap_threshold= 0.4, **kwargs):
         #pandas.DataFrame of input gene sets vs factor marker genes overlap coefficients
         adata.uns["SPECTRA_overlap"] = overlap_df
         adata.uns["SPECTRA_cell_scores"] = cell_scores
+        adata.uns["SPECTRA_markers"] = pd.DataFrame(adata.uns["SPECTRA_markers"], 
+                                    index= column_labels)
     else:
         adata.obsm["SPECTRA_cell_scores"] = spectra.cell_scores
 
