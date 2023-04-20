@@ -1152,8 +1152,8 @@ def label_marker_genes(marker_genes, gs_label_dict, threshold = 0.4):
         else:
             marker_gene_labels.append(marker_set)
     overlap_df.index = marker_gene_labels     
-    marker_dict = {key:value for key,value in enumerate(marker_gene_labels)}    
-    return overlap_df, marker_dict
+    #marker_dict = {key:value for key,value in enumerate(marker_gene_labels)}    
+    return overlap_df, marker_gene_labels
 
 def est_spectra(adata, gene_set_dictionary, L = None,use_highly_variable = True, cell_type_key = None, use_weights = True, lam = 0.008, delta=0.001,kappa = None, rho = 0.05, use_cell_types = True, n_top_vals = 50, 
 filter_sets = True, label_factors=True, overlap_threshold= 0.4, **kwargs):
@@ -1317,12 +1317,12 @@ filter_sets = True, label_factors=True, overlap_threshold= 0.4, **kwargs):
         celltype_dict = get_factor_celltypes(adata, cell_type_key, cellscore=spectra.cell_scores)
         max_celltype = [celltype_dict[x] for x in range(spectra.cell_scores.shape[1])]
         #get gene set with maximum overlap coefficient with top marker genes
-        max_gene_set, overlap_df = label_marker_genes(adata.uns["SPECTRA_markers"] , gene_set_dictionary_flat, threshold = overlap_threshold)
+        overlap_df, max_gene_set  = label_marker_genes(adata.uns["SPECTRA_markers"] , gene_set_dictionary_flat, threshold = overlap_threshold)
 
         #create new column labels
         column_labels = []
         for i in range(len(spectra.cell_scores)):
-            column_labels.append(str(i) + '-X-' + max_celltype[i] + '-X-' + max_gene_set[i])
+            column_labels.append(str(i) + '-X-' + str(max_celltype[i]) + '-X-' + str(max_gene_set[i]))
         cell_scores = pd.DataFrame(spectra.cell_scores, 
                                     index= adata.obs_names,
                                     columns=column_labels)
