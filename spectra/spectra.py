@@ -1156,7 +1156,7 @@ def label_marker_genes(marker_genes, gs_label_dict, threshold = 0.4):
     return overlap_df, marker_gene_labels
 
 def est_spectra(adata, gene_set_dictionary, L = None,use_highly_variable = True, cell_type_key = None, use_weights = True, lam = 0.008, delta=0.001,kappa = None, rho = 0.05, use_cell_types = True, n_top_vals = 50, 
-filter_sets = True, label_factors=True, overlap_threshold= 0.4, **kwargs):
+filter_sets = True, label_factors=True, overlap_threshold= 0.2, **kwargs):
     """ 
     
     Parameters
