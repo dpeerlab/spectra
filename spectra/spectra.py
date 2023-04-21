@@ -1328,7 +1328,7 @@ filter_sets = True, label_factors=True, overlap_threshold= 0.2, **kwargs):
     #labeling function
     if label_factors:
         #get cell type specificity of every factor
-        if is_global = False:
+        if is_global == False:
             celltype_dict = get_factor_celltypes(adata, cell_type_key, cellscore=spectra.cell_scores)
             max_celltype = [celltype_dict[x] for x in range(spectra.cell_scores.shape[1])]
         else:
