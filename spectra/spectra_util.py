@@ -21,7 +21,11 @@ overlap_coefficient()
 """
 
 
+
 def get_default_dict(path= dirname(__file__)+'/data/Spectra_dict.json' ):
+    '''
+    load default gene set dictionary
+    '''
     import pickle
     # load KnowledgeBase from pickled file
     with open(path, 'rb') as f:  # notice the r instead of w
