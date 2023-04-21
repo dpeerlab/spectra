@@ -28,10 +28,10 @@ def get_default_dict(path= pkg_resources.resource_filename(__name__, '/Spectra_d
     '''
     load default gene set dictionary
     '''
-    import pickle
+    import json
     # load KnowledgeBase from pickled file
-    with open(path, 'rb') as f:  
-        Spectra_dict = pickle.load(f) 
+    f = open(path, 'r')
+    Spectra_dict = json.loads(f.read())
     return Spectra_dict
 
 
