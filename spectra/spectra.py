@@ -1319,14 +1319,19 @@ filter_sets = True, label_factors=True, overlap_threshold= 0.2, **kwargs):
         if isinstance(v,dict):
             for k2,v2 in v.items():
                 gene_set_dictionary_flat[k2] = v2
+            is_global = False
         else:
             gene_set_dictionary_flat[k] = v
+            is_global = True
 
     #labeling function
     if label_factors:
         #get cell type specificity of every factor
-        celltype_dict = get_factor_celltypes(adata, cell_type_key, cellscore=spectra.cell_scores)
-        max_celltype = [celltype_dict[x] for x in range(spectra.cell_scores.shape[1])]
+        if is_global = False:
+            celltype_dict = get_factor_celltypes(adata, cell_type_key, cellscore=spectra.cell_scores)
+            max_celltype = [celltype_dict[x] for x in range(spectra.cell_scores.shape[1])]
+        else:
+            max_celltype = ['global']*(spectra.cell_scores.shape[1])
         #get gene set with maximum overlap coefficient with top marker genes
         overlap_df, max_gene_set  = label_marker_genes(adata.uns["SPECTRA_markers"] , gene_set_dictionary_flat, threshold = overlap_threshold)
 
