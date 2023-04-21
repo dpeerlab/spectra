@@ -19,6 +19,16 @@ overlap_coefficient()
 
 """
 
+
+def get_default_dict():
+    import pkg_resources
+    path = pkg_resources.get_resource_filename(__name__, 'data/Spectra_dict.json'))
+    # load KnowledgeBase from pickled file
+    with open(path, 'rb') as f:  # notice the r instead of w
+        Spectra_dict = pickle.load(f) 
+    return Spectra_dict
+
+
 def amatrix(gene_set_list,gene2id):
     """ 
     creates adjacency matrix from gene set list
@@ -86,14 +96,6 @@ def process_gene_sets(gs_dict, gene2id, weighted = True):
                 weights[key] = []
 
     return adict, weights
-
-def get_default_dict():
-    import pkg_resources
-    path = pkg_resources.get_resource_filename(__name__, 'data/Spectra_dict.json'))
-    # load KnowledgeBase from pickled file
-    with open(path, 'rb') as f:  # notice the r instead of w
-        Spectra_dict = pickle.load(f) 
-    return Spectra_dict
 
 def process_gene_sets_no_celltypes(gs_dict, gene2id, weighted = True):
     """ 
