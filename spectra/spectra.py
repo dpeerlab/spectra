@@ -1323,6 +1323,8 @@ filter_sets = True, label_factors=True, overlap_threshold= 0.2, **kwargs):
         column_labels = []
         for i in range(len(spectra.cell_scores.T)):
             column_labels.append(str(i) + '-X-' + str(max_celltype[i]) + '-X-' + str(max_gene_set[i]))
+
+        overlap_df.index = column_labels
         #cell_scores = pd.DataFrame(spectra.cell_scores, 
                             #        index= adata.obs_names,
                              #       columns=column_labels)
