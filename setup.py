@@ -13,6 +13,11 @@ setup(
         'opt-einsum>=3.3.0',
         'pandas>=1.3.5',
         'tqdm>=4.62.3',
-        'pyvis>=0.1.9']
+        'pyvis>=0.1.9'],
+    include_package_data=True,
+    package_data={
+    'Spectra_dict': ['cytopus/data/Spectra_dict.json']
+}
+
         
 )
