@@ -20,8 +20,7 @@ overlap_coefficient()
 """
 
 
-def get_default_dict(path= pkg_resources.get_resource_filename(__name__, 'data/Spectra_dict.json'))):
-    import pkg_resources
+def get_default_dict(path= pkg_resources.get_resource_filename(__name__, 'data/Spectra_dict.json')):
     import pickle
     # load KnowledgeBase from pickled file
     with open(path, 'rb') as f:  # notice the r instead of w
