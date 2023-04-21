@@ -1127,6 +1127,7 @@ def get_factor_celltypes(adata, obs_key, cellscore):
         
     
     else:
+        factors_inv = {}
         for factor in global_factors:
             factors_inv[factor]= 'global'
     
