@@ -1119,11 +1119,17 @@ def get_factor_celltypes(adata, obs_key, cellscore):
             for factor in v:
                 factors_inv[factor]=i
     
-    #add global
+        #add global
 
-    for factor in global_factors:
-        factors_inv[factor]= 'global'
-            
+        for factor in global_factors:
+            factors_inv[factor]= 'global'
+                
+        
+    
+    else:
+        for factor in global_factors:
+            factors_inv[factor]= 'global'
+    
     return factors_inv
 
 
@@ -1333,7 +1339,7 @@ filter_sets = True, label_factors=True, overlap_threshold= 0.2, **kwargs):
         #cell_scores = pd.DataFrame(spectra.cell_scores, 
                             #        index= adata.obs_names,
                              #       columns=column_labels)
-        adata.uns["SPECTRA_overlap"] = np.array(overlap_df)
+        adata.uns["SPECTRA_overlap"] = overlap_df
         adata.obsm["SPECTRA_cell_scores"] = spectra.cell_scores
         #adata.uns["SPECTRA_markers"] = pd.DataFrame(adata.uns["SPECTRA_markers"], 
                                   #  index= column_labels)
