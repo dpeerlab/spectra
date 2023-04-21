@@ -15,9 +15,7 @@ setup(
         'tqdm>=4.62.3',
         'pyvis>=0.1.9'],
     include_package_data=True,
-    package_data={
-    'Spectra_dict': ['Spectra_dict.json']
-}
+    package_data={'Spectra_dict': ['spectra/Spectra_dict.json']}
 
         
 )
