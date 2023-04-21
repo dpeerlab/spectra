@@ -1308,8 +1308,11 @@ filter_sets = True, label_factors=True, overlap_threshold= 0.2, **kwargs):
     gene_set_dictionary_flat = {}
 
     for k,v in gene_set_dictionary.items():
-        for k2,v2 in v.items():
-            gene_set_dictionary_flat[k2] = v2
+        if isinstance(v,dict):
+            for k2,v2 in v.items():
+                gene_set_dictionary_flat[k2] = v2
+        else:
+            gene_set_dictionary_flat[k] = v
 
     #labeling function
     if label_factors:
