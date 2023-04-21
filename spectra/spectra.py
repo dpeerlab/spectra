@@ -1104,17 +1104,20 @@ def get_factor_celltypes(adata, obs_key, cellscore):
     #find global and cell type specific fators
     global_factors_series = (cell_scores_df.groupby('celltype').mean() !=0).all()
     global_factors = [factor for factor in global_factors_series.index if global_factors_series[factor]]
-    specific_cell_scores = (cell_scores_df.groupby('celltype').mean()).T[~global_factors_series].T
+
     specific_factors = {}
+    if len(global_factors) != (len(cell_scores_df.columns)-1):
+        specific_cell_scores = (cell_scores_df.groupby('celltype').mean()).T[~global_factors_series].T
     
-    for i in set(cell_scores_df['celltype']):
-        specific_factors[i]=[factor for factor in specific_cell_scores.loc[i].index if specific_cell_scores.loc[i,factor]]
     
-    #inverse dict factor:celltype
-    factors_inv = {}
-    for i,v in specific_factors.items():
-        for factor in v:
-            factors_inv[factor]=i
+        for i in set(cell_scores_df['celltype']):
+            specific_factors[i]=[factor for factor in specific_cell_scores.loc[i].index if specific_cell_scores.loc[i,factor]]
+    
+        #inverse dict factor:celltype
+        factors_inv = {}
+        for i,v in specific_factors.items():
+            for factor in v:
+                factors_inv[factor]=i
     
     #add global
 
@@ -1124,7 +1127,7 @@ def get_factor_celltypes(adata, obs_key, cellscore):
     return factors_inv
 
 
-def label_marker_genes(marker_genes, gs_label_dict, threshold = 0.4):
+def label_marker_genes(marker_genes, gs_dict, threshold = 0.4):
     '''
     label an array of marker genes using the gene_set_dictionary in est_spectra
     returns a dataframe of overlap coefficients for each gene set annotation and marker gene
@@ -1132,8 +1135,7 @@ def label_marker_genes(marker_genes, gs_label_dict, threshold = 0.4):
     label an array containing marker genes by its overlap with a dictionary of gene sets from the knowledge base:
     KnowledgeBase.celltype_process_dict
     '''
-   
-    gs_dict = gs_label_dict
+
     overlap_df = pd.DataFrame()
     for i, v in pd.DataFrame(marker_genes).T.items():
         overlap_temp = []
