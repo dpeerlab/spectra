@@ -1,6 +1,6 @@
 import numpy as np 
 from collections import OrderedDict 
-from os.path import dirname
+import pkg_resources
 """
 methods 
 _______
@@ -17,12 +17,14 @@ process_gene_sets_no_celltypes()
 
 overlap_coefficient()
 
+get_default_dict()
+
 
 """
 
 
 
-def get_default_dict(path= dirname(__file__)+'annotations.json' ):
+def get_default_dict(path= pkg_resources.resource_filename(__name__, '/Spectra_dict.json')):
     '''
     load default gene set dictionary
     '''

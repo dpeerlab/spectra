@@ -16,7 +16,7 @@ setup(
         'pyvis>=0.1.9'],
     include_package_data=True,
     package_data={
-    'Spectra_dict': ['cytopus/data/Spectra_dict.json']
+    'Spectra_dict': ['Spectra_dict.json']
 }
 
         
