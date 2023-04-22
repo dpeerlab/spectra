@@ -26,6 +26,13 @@ label_marker_genes()
 
 """
 
+def overlap_coefficient(list1, list2): 
+    """ 
+    Computes overlap coefficient between two lists
+    """ 
+    intersection = len(list(set(list1).intersection(set(list2))))
+    union = min(len(list1),len(list2))# + len(list2)) - intersection
+    return float(intersection) / union
 
 
 def get_default_dict(path= pkg_resources.resource_filename(__name__, '/Spectra_dict.json')):
@@ -56,7 +63,7 @@ def label_marker_genes(marker_genes, gs_dict, threshold = 0.4):
         
         for gs_name, gs in gs_dict.items():
             marker_set_len_dict[gs_name] = len(gs)
-            overlap_temp.append(spectra_util.overlap_coefficient(set(gs),set(v)))
+            overlap_temp.append(overlap_coefficient(set(gs),set(v)))
             gs_names_temp.append(gs_name)
         overlap_df_temp = pd.DataFrame(overlap_temp, columns=[i],index=gs_names_temp).T
         overlap_df = pd.concat([overlap_df,overlap_df_temp])
@@ -162,13 +169,6 @@ def process_gene_sets_no_celltypes(gs_dict, gene2id, weighted = True):
         weights = amatrix_weighted(unravel_dict(gs_dict) , gene2id)
     return adict, weights
 
-def overlap_coefficient(list1, list2): 
-    """ 
-    Computes overlap coefficient between two lists
-    """ 
-    intersection = len(list(set(list1).intersection(set(list2))))
-    union = min(len(list1),len(list2))# + len(list2)) - intersection
-    return float(intersection) / union
 
 def get_factor_celltypes(adata, obs_key, cellscore_obsm_key = 'SPECTRA_cell_scores'):
     '''
