@@ -237,12 +237,14 @@ class SPECTRA(nn.Module):
                 self.kappa["global"] = torch.tensor(np.log(kappa/(1-kappa)))
                 for cell_type in self.cell_types:
                     self.kappa[cell_type] = torch.tensor(np.log(kappa /(1-kappa)))
+                self.kappa = nn.ParameterDict(self.kappa)
             
             if rho != None:
                 self.rho = {}
                 self.rho["global"] = torch.tensor(np.log(rho/(1-rho)))
                 for cell_type in self.cell_types:
                     self.rho[cell_type] = torch.tensor(np.log(rho/(1-rho)))
+                self.rho = nn.ParameterDict(self.rho)
 
     
     def loss(self, X, labels): 
