@@ -90,12 +90,15 @@ model.return_gene_scalings()
 
 Apart from cell scores and factors, we can also retrive a number of other parameters this way that are not by default added to the AnnData. Eta diag is the diagonal of the fitted factor-factor interaction matrix; however, its interpretation is that it measures the extent to which each factor is influenced by the prior information. In practice many of these values are zero, indicating that they are estimated without bias introduced by the annotation set. Eta is the full set of factor-factor interaction matrices, whose off diagonals measure the extent to which factors share the same genes. Rho and kappa are parameters that control the background rate of non-edges and edges respectively. These can be fixed throughout training (default) or estimated from the data by providing `rho = None` or `kappa = None` to the `est_spectra()` function  or to `model.train()`. Finally gene scalings are correction factors that normalize each gene based on its mean expression value. 
 
+
 ## Estimating the number of factors
-To estimate the number of factors first, run
+For most datasets you want to select the number of factors based on the number of gene sets and prior knowledge as well as the granularity of the expected gene programs. However, we also provide a method to estimate the number of factors. To estimate the number of factors first, run:
 ```
 from spectra import K_est as kst
 L = kst.estimate_L(adata, attribute = "cell_type", highly_variable = True)
 ```
+
+
 ## Fitting via EM 
 For smaller problems we can use a memory intensive EM algorithm instead
 ```
