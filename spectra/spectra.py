@@ -1161,7 +1161,9 @@ def label_marker_genes(marker_genes, gs_dict, threshold = 0.4):
     #find maximum overlap coefficient gene set label for each factor, resolve ties by gene set length
     marker_gene_labels = [] #gene sets
     
-    for marker_set in list(overlap_df.index).remove('gene_set_length'):
+    marker_gene_list = list(overlap_df.index)
+    marker_gene_list.remove('gene_set_length')
+    for marker_set in marker_gene_list:
         max_overlap = overlap_df.loc[[marker_set,'gene_set_length']].sort_values(by='gene_set_length',ascending=False).sort_values(by=marker_set,ascending=True).index[-1]
         
         if overlap_df.loc[marker_set].sort_values().values[-1] >threshold:
