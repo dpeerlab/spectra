@@ -1,6 +1,7 @@
 import numpy as np 
 from collections import OrderedDict 
 import pkg_resources
+
 """
 methods 
 _______
@@ -19,6 +20,8 @@ overlap_coefficient()
 
 get_default_dict()
 
+label_marker_genes()
+
 
 """
 
@@ -33,6 +36,47 @@ def get_default_dict(path= pkg_resources.resource_filename(__name__, '/Spectra_d
     f = open(path, 'r')
     Spectra_dict = json.loads(f.read())
     return Spectra_dict
+
+
+def label_marker_genes(marker_genes, gs_dict, threshold = 0.4):
+    '''
+    label an array of marker genes using the gene_set_dictionary in est_spectra
+    returns a dataframe of overlap coefficients for each gene set annotation and marker gene
+    marker_genes: array factors x marker genes or a KnowledgeBase object
+    label an array containing marker genes by its overlap with a dictionary of gene sets from the knowledge base:
+    KnowledgeBase.celltype_process_dict
+    '''
+
+    overlap_df = pd.DataFrame()
+    marker_set_len_dict = {} #len of gene sets to resolve ties
+    for i, v in pd.DataFrame(marker_genes).T.items():
+        overlap_temp = []
+        gs_names_temp = []
+        
+        for gs_name, gs in gs_dict.items():
+            marker_set_len_dict[gs_name] = len(gs)
+            overlap_temp.append(spectra_util.overlap_coefficient(set(gs),set(v)))
+            gs_names_temp.append(gs_name)
+        overlap_df_temp = pd.DataFrame(overlap_temp, columns=[i],index=gs_names_temp).T
+        overlap_df = pd.concat([overlap_df,overlap_df_temp])
+    overlap_df.loc['gene_set_length'] = list(overlap_df.columns.map(marker_set_len_dict))
+
+    #find maximum overlap coefficient gene set label for each factor, resolve ties by gene set length
+    marker_gene_labels = [] #gene sets
+    
+    marker_gene_list = list(overlap_df.index)
+    marker_gene_list.remove('gene_set_length')
+    for marker_set in marker_gene_list:
+        #resolve ties in overlap_coefficient by selecting the bigger gene set
+        max_overlap = overlap_df.loc[[marker_set,'gene_set_length']].T.sort_values(by='gene_set_length',ascending=True).sort_values(by=marker_set,ascending=True)[marker_set].index[-1]
+        
+        if overlap_df.loc[marker_set].sort_values().values[-1] >threshold:
+            marker_gene_labels.append(max_overlap)
+        else:
+            marker_gene_labels.append(marker_set)
+    overlap_df = overlap_df.drop(index='gene_set_length')
+    overlap_df.index = marker_gene_labels
+    return overlap_df
 
 
 def amatrix(gene_set_list,gene2id):
