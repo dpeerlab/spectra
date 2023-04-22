@@ -1144,17 +1144,18 @@ def label_marker_genes(marker_genes, gs_dict, threshold = 0.4):
     '''
 
     overlap_df = pd.DataFrame()
+    marker_set_len_dict = {} #len of gene sets to resolve ties
     for i, v in pd.DataFrame(marker_genes).T.items():
         overlap_temp = []
         gs_names_temp = []
-        marker_set_len_dict = {} #len of gene sets to resolve ties
+        
         for gs_name, gs in gs_dict.items():
             marker_set_len_dict[gs_name] = len(gs)
             overlap_temp.append(spectra_util.overlap_coefficient(set(gs),set(v)))
             gs_names_temp.append(gs_name)
         overlap_df_temp = pd.DataFrame(overlap_temp, columns=[i],index=gs_names_temp).T
         overlap_df = pd.concat([overlap_df,overlap_df_temp])
-        overlap_df.loc['gene_set_length'] = overlap_df.columns.map(marker_set_len_dict)
+    overlap_df.loc['gene_set_length'] = overlap_df.columns.map(marker_set_len_dict)
     
 
     #find maximum overlap coefficient gene set label for each factor, resolve ties by gene set length
