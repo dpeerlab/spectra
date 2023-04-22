@@ -2,7 +2,10 @@
 
 ![alt text](img/spectra_img.png?raw=true)
 
-SPECTRA takes in a single cell gene expression matrix and a set of pathway annotations to fit the data to. 
+
+## Overview
+
+SPECTRA takes in a single cell gene expression matrix, cell type annotations, and a set of pathway annotations to fit the data to. 
 
 ```
 gene_set_annotations = {
@@ -25,40 +28,29 @@ gene_set_annotations = {
 
 
 # Installation 
+
 A pypi package will be available soon. For installation, you can add spectra to pip:  
  
 ```
-git clone https://github.com/dpeerlab/spectra
-cd spectra
-pip install . 
+pip install git+https://github.com/dpeerlab/spectra
 
 ```
 
+
 # Tutorial
 
-We provide a full tutorial how to run the basic Spectra model here:
+We provide a full tutorial how to run the basic Spectra model here: [![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/dpeerlab/spectra/blob/main/notebooks/Spectra_Colaboratory_tutorial.ipynb)
 
-https://github.com/dpeerlab/spectra/blob/main/notebooks/Spectra_Colaboratory_tutorial.ipynb
+You can use log1p transformed median library size normalized data. For leukocyte data, we recommend using [scran normalization](https://doi.org/10.1186/s13059-016-0947-7). We provide a [tutorial](https://github.com/dpeerlab/spectra/blob/main/notebooks/scran_preprocessing.ipynb).
 
-You can run this tutorial on the Google Colaboratory.
-
-You can use log1p transformed median library size normalized data. Most benchmarks have been performed using scran normalization (https://doi.org/10.1186/s13059-016-0947-7). You can find a tutorial how to prepare your data for scran here:
-
-https://github.com/dpeerlab/spectra/blob/main/notebooks/scran_preprocessing.ipynb
-
-An R script to run scran can be found in the preprocessing folder of this repository.
 
 # scRNAseq Knowledge Base
 
-Check out our scRNAseq knowledge base *Cytopus* to retrieve *Spectra* input gene sets ideal for the cell type composition in your data:
-
-https://github.com/wallet-maker/cytopus
-
-# Example Data Download:
-Data used for the examples can be found in the data folder of this package (https://github.com/dpeerlab/spectra/tree/main/data): This is a subsetted version of the Bassez et al. Nature Medicine (https://doi.org/10.1038/s41591-021-01323-8) preprocessed by scran and emptydrops with annotated cell types.
+Check out our scRNAseq knowledge base [Cytopus :octopus:](https://github.com/wallet-maker/cytopus) to retrieve *Spectra* input gene sets adapted to the cell type composition in your data.
 
 
-# Usage
+# Short Tutorial
+
 We start by importing spectra. The easiest way to run spectra is to use the `est_spectra` function in the `spectra` module, as shown below. The default behavior is to set the number of factors equal to the number of gene sets plus one. However, this can be modified by passing an integer e.g. `L = 20` as an argument to the function or a dictionary that maps cell type to an integer per cell type. We provide a method for estimating the number of factors directly from the data by bulk eigenvalue matching analysis, which is detailed further below. 
 ```
 from spectra import spectra as spc
@@ -72,6 +64,7 @@ markers = adata.uns['SPECTRA_markers'] # factors x K [where K is a user specifie
 cell_scores = adata.obsm['SPECTRA_cell_scores'] # cells x factors matrix of cell scores
 vocab = adata.var['spectra_vocab'] # boolean matrix of size # of genes that indicates the set of genes used to fit spectra 
 ```
+
 
 ## Accessing model parameters
 To access finer grained information about the model fit, we can look at the attributes of the model object directly. Model parameters can be accessed with functions associated with the model object
