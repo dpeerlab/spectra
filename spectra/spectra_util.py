@@ -1,6 +1,7 @@
 import numpy as np 
 from collections import OrderedDict 
 import pkg_resources
+import pandas as pd
 
 """
 methods 
