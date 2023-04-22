@@ -1170,7 +1170,8 @@ def label_marker_genes(marker_genes, gs_dict, threshold = 0.4):
             marker_gene_labels.append(max_overlap)
         else:
             marker_gene_labels.append(marker_set)
-    overlap_df.index = marker_gene_labels     
+    overlap_df = overlap_df.drop(index='gene_set_length')
+    overlap_df.index = marker_gene_labels
     #marker_dict = {key:value for key,value in enumerate(marker_gene_labels)}    
     return overlap_df
 
