@@ -361,11 +361,11 @@ def get_information_score(adata, idxs, cell_type):
 
 
 
-def plot_scores():
+def plot_scores(info_scores, importance_scores, eta):
     plt.figure(figsize=(12, 8))
 
     # Create a scatter plot of all the points
-    plt.scatter(markers["CD8_information"], markers["CD8_importance"], c=markers["eta"], cmap="coolwarm", edgecolors="black")
+    plt.scatter(info_scores, importance_scores, c=eta, cmap="coolwarm", edgecolors="black")
 
     # Add a colorbar legend
     cbar = plt.colorbar()
@@ -375,24 +375,16 @@ def plot_scores():
     plt.set_cmap("coolwarm")
     cmap = plt.get_cmap()
     norm = plt.Normalize(vmin=0, vmax=1)
-    colors = cmap(norm(markers["eta"]))
+    colors = cmap(norm(eta))
 
     # Create a scatter plot of all the points with colored edges
-    plt.scatter(markers["CD8_information"], markers["CD8_importance"], c=colors, s=50, edgecolors="black")
+    plt.scatter(info_scores, importance_scores, c=colors, s=50, edgecolors="black")
 
     # Add labels and title
-    plt.xlabel("CD8_information")
-    plt.ylabel("CD8_importance")
-    plt.title("Scatter Plot of CD8_information against CD8_importance")
+    plt.xlabel("information")
+    plt.ylabel("importance")
+    plt.title("Scatter Plot of information against importance")
 
-    # Label the points based on the "best_match" column if they pass the thresholds
-    texts = []
-    for i in range(len(markers)):
-        if markers["CD8_information"].iloc[i] > 0.3 and markers["CD8_importance"].iloc[i] > 0.0075:
-            texts.append(plt.text(markers["CD8_information"].iloc[i], markers["CD8_importance"].iloc[i], markers["best_match"].iloc[i]))
-
-    # Adjust the position of the annotations so they don't overlap each other
-    adjust_text(texts)
 
 
 
