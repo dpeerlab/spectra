@@ -2,7 +2,10 @@ import numpy as np
 from collections import OrderedDict 
 import pkg_resources
 import pandas as pd
-
+import torch 
+from adjustText import adjust_text
+from opt_einsum import contract
+import scipy
 """
 methods 
 _______
@@ -257,3 +260,142 @@ def check_gene_set_dictionary(adata, annotations, obs_key='cell_type_annotations
         print('Your gene set annotation dictionary is correctly formatted.')
     if return_dict:
         return annotations_new
+
+
+
+#importance and information score functions 
+import torch 
+
+
+def mimno_coherence_single(w1,w2,W):
+    eps = 0.01
+    dw1 = W[:, w1] > 0
+    dw2 = W[:, w2] > 0
+    N = W.shape[0]
+
+    dw1w2 = (dw1 & dw2).float().sum() 
+    dw1 = dw1.float().sum() 
+    dw2 = dw2.float().sum() 
+    if (dw1 == 0)|(dw2 == 0):
+        return(-.1*np.inf)
+    return ((dw1w2 + 1)/(dw2)).log()
+
+def mimno_coherence_2011(words, W): 
+    score = 0
+    V= len(words)
+
+    for j1 in range(1, V):
+        for j2 in range(j1):
+            score += mimno_coherence_single(words[j1], words[j2], W)
+    denom = V*(V-1)/2
+    return(score/denom)
+
+
+
+def holdout_loss(model, adata, cell_type,labels):
+    if "spectra_vocab" not in adata.var.columns:
+        print("adata requires spectra_vocab attribute.") 
+	return None
+    
+    idx_to_use = adata.var["spectra_vocab"]
+    X = adata.X[:, idx_to_use]
+    if type(X) == scipy.sparse.csr.csr_matrix:
+        X = np.array(X.todense()) 
+    X = torch.Tensor(X)
+    loss_cf = 0.0
+    theta_global = torch.softmax(model.internal_model.theta["global"], dim = 1)
+    eta_global = (model.internal_model.eta["global"]).exp()/(1.0 + (model.internal_model.eta["global"]).exp())
+    eta_global = 0.5*(eta_global + eta_global.T)
+    gene_scaling_global = model.internal_model.gene_scaling["global"].exp()/(1.0 + model.internal_model.gene_scaling["global"].exp())
+    kappa_global = model.internal_model.kappa["global"].exp()/(1 + model.internal_model.kappa["global"].exp())
+    rho_global = model.internal_model.rho["global"].exp()/(1. + model.internal_model.rho["global"].exp())
+    #loop through cell types and evaluate loss at every cell type
+
+    kappa = model.internal_model.kappa[cell_type].exp()/(1 + model.internal_model.kappa[cell_type].exp())
+    rho = model.internal_model.rho[cell_type].exp()/(1 + model.internal_model.rho[cell_type].exp())
+    gene_scaling_ct = model.internal_model.gene_scaling[cell_type].exp()/(1.0 + model.internal_model.gene_scaling[cell_type].exp())
+    X_c = X[labels == cell_type]
+    adj_matrix = model.internal_model.adj_matrix[cell_type] 
+    weights = model.internal_model.weights[cell_type]
+    adj_matrix_1m = model.internal_model.adj_matrix_1m[cell_type]
+    theta_ct = torch.softmax(model.internal_model.theta[cell_type], dim = 1)
+    eta_ct = (model.internal_model.eta[cell_type]).exp()/(1.0 + (model.internal_model.eta[cell_type]).exp())
+    eta_ct = 0.5*(eta_ct + eta_ct.T)
+    theta_global_ = contract('jk,j->jk',theta_global, gene_scaling_global + model.internal_model.delta)
+    theta_ct_ = contract('jk,j->jk',theta_ct, gene_scaling_ct + model.internal_model.delta)
+    theta = torch.cat((theta_global_, theta_ct_),1)
+    alpha = torch.exp(model.internal_model.alpha[cell_type])
+    
+    recon = contract('ik,jk->ij', alpha, theta) 
+    term1 = -1.0*(torch.xlogy(X_c,recon) - recon).sum()
+    tot_loss = model.internal_model.lam*term1
+    
+    lst = []
+    for j in range(theta.shape[1]):
+        mask = torch.ones(theta.shape[1])
+        mask[j] = 0
+        mask = mask.reshape(1,-1)
+        recon = contract('ik,jk->ij', alpha, theta*mask) 
+        term1 = -1.0*(torch.xlogy(X_c,recon) - recon).sum()
+        loss_cf = model.internal_model.lam*term1
+        lst.append(((loss_cf - tot_loss)/tot_loss).detach().numpy().item())
+        
+    return(np.array(lst))
+
+
+
+def get_information_score(adata, idxs, cell_type):
+    if "spectra_vocab" not in adata.var.columns:
+        print("adata requires spectra_vocab attribute.")
+        return None
+
+    idx_to_use = adata.var["spectra_vocab"]
+    X = adata.X[:, idx_to_use]
+    if type(X) == scipy.sparse.csr.csr_matrix:
+        X = np.array(X.todense())
+    X = torch.Tensor(X)
+    lst = []
+    for j in range(idxs.shape[0]):
+        lst.append(mimno_coherence_2011(list(idxs[j,:]), X[labels == cell_type]))
+    return(lst)
+
+
+
+def plot_scores():
+    plt.figure(figsize=(12, 8))
+
+    # Create a scatter plot of all the points
+    plt.scatter(markers["CD8_information"], markers["CD8_importance"], c=markers["eta"], cmap="coolwarm", edgecolors="black")
+
+    # Add a colorbar legend
+    cbar = plt.colorbar()
+    cbar.ax.set_ylabel("eta")
+
+    # Set the colors for the scatter plot based on the "eta_high" column
+    plt.set_cmap("coolwarm")
+    cmap = plt.get_cmap()
+    norm = plt.Normalize(vmin=0, vmax=1)
+    colors = cmap(norm(markers["eta"]))
+
+    # Create a scatter plot of all the points with colored edges
+    plt.scatter(markers["CD8_information"], markers["CD8_importance"], c=colors, s=50, edgecolors="black")
+
+    # Add labels and title
+    plt.xlabel("CD8_information")
+    plt.ylabel("CD8_importance")
+    plt.title("Scatter Plot of CD8_information against CD8_importance")
+
+    # Label the points based on the "best_match" column if they pass the thresholds
+    texts = []
+    for i in range(len(markers)):
+        if markers["CD8_information"].iloc[i] > 0.3 and markers["CD8_importance"].iloc[i] > 0.0075:
+            texts.append(plt.text(markers["CD8_information"].iloc[i], markers["CD8_importance"].iloc[i], markers["best_match"].iloc[i]))
+
+    # Adjust the position of the annotations so they don't overlap each other
+    adjust_text(texts)
+
+
+
+    # Show the plot
+    plt.show()
+
