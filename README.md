@@ -5,6 +5,8 @@
 
 SPECTRA takes in a single cell gene expression matrix, cell type annotations, and a set of pathway annotations to fit the data to. 
 
+If you use Spectra please cite our preprint on [bioRxiv](https://doi.org/10.1101/2022.12.20.521311).
+
 ```
 gene_set_annotations = {
 "global": {"global_ifn_II_response" : ["CIITA", "CXCL10", ...] , "global_MHCI": ["HLA-A". "HLA-B", "HLA-C"] },
