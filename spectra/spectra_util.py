@@ -49,6 +49,55 @@ def get_default_dict(path= pkg_resources.resource_filename(__name__, '/Spectra_d
     return Spectra_dict
 
 
+def check_gene_set_dictionary(adata, annotations, obs_key='cell_type_annotations',global_key='global', return_dict = True,min_len=3):
+    '''
+    Filters annotations dictionary to contain only genes contained in the adata. 
+    Checks that annotations dictionary cell type keys and adata cell types are identical.
+    Checks that all gene sets in annotations dictionary contain >2 genes after filtering.
+    if (len(adata_labels)<len(annotation_labels)) | (set(annotation_labels) != set(adata_labels)):
+
+    
+    adata: AnnData , data to use with Spectra
+    annotations: dict , gene set annotations dictionary to use with Spectra
+    obs_key: str , column name for cell type annotations in adata.obs
+    global_key: str , key for global gene sests in gene set annotation dictionary
+    return_dict: bool , return filtered gene set annotation dictionary
+    min_len: int, minimum length of gene sets
+    
+    returns: dict , filtered gene set annotation dictionary
+    
+    '''
+    #test if keys match
+    adata_labels  = list(set(adata.obs[obs_key]))+['global']#cell type labels in adata object
+    annotation_labels = list(annotations.keys())
+    matching_celltype_labels = list(set(adata_labels).intersection(annotation_labels))
+    if set(annotation_labels)!=set(adata_labels):
+        missing_adata = set(adata_labels)-set(annotation_labels)
+        missing_dict = set(annotation_labels) - set(adata_labels)
+        print('The following adata labels are missing in the gene set annotation dictionary:',missing_dict)
+        print('The following gene set annotation dictionary keys are missing in the adata labels:',missing_adata)
+        dict_keys_OK = False
+    else:
+        print('Cell type labels in gene set annotation dictionary and AnnData object are identical')
+        dict_keys_OK = True
+        
+    #check that gene sets in dictionary have len >2
+    annotations_new = {}
+    for k,v in annotations.items():
+        annotations_new[k] = {}
+        for k2,v2 in v.items():
+            gs= [x for x in v2 if x in adata.var_names]
+            if len(v2)<=min_len:
+                print('removing gene set',k2,'for cell type',k,'which is of length',len(v2),'minimum length is',min_len)
+            else:
+                annotations_new[k][k2] = gs
+            
+    if dict_keys_OK:
+        print('Your gene set annotation dictionary is now correctly formatted.')
+    if return_dict:
+        return annotations_new
+
+
 def label_marker_genes(marker_genes, gs_dict, threshold = 0.4):
     '''
     label an array of marker genes using the gene_set_dictionary in est_spectra
