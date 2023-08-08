@@ -545,7 +545,8 @@ class SPECTRA_Model:
                             print("UPDATING LR TO " + str(lr_schedule[int(counter/skip)]))
                 last = loss.item() 
 
-
+        print("Reached converence at epoch " + i)
+        
         #add all model parameters as attributes 
 
         if self.use_cell_types:
