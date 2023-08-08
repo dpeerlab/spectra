@@ -576,7 +576,7 @@ class SPECTRA_Model:
                     if verbose:
                         print("UPDATING LR TO " + str(lr_schedule[int(counter/3)]))
             last = loss.item() 
-
+        print("Reached converence at epoch " + i)
 
         #add all model parameters as attributes 
 
