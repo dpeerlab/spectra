@@ -261,56 +261,6 @@ def get_factor_celltypes(adata, obs_key, cellscore_obsm_key = 'SPECTRA_cell_scor
     return factors_inv
 
 
-def check_gene_set_dictionary(adata, annotations, obs_key='cell_type_annotations',global_key='global', return_dict = True):
-    '''
-    Filters annotations dictionary contains only genes contained in the adata. 
-    Checks that annotations dictionary cell type keys and adata cell types are identical.
-    Checks that all gene sets in annotations dictionary contain >2 genes after filtering.
-    
-    adata: AnnData , data to use with Spectra
-    annotations: dict , gene set annotations dictionary to use with Spectra
-    obs_key: str , column name for cell type annotations in adata.obs
-    global_key: str , key for global gene sests in gene set annotation dictionary
-    return_dict: bool , return filtered gene set annotation dictionary
-    
-    returns: dict , filtered gene set annotation dictionary
-    
-    '''
-    #test if keys match
-    adata_labels  = list(set(adata.obs[obs_key]))+['global']#cell type labels in adata object
-    annotation_labels = list(annotations.keys())
-    matching_celltype_labels = list(set(adata_labels).intersection(annotation_labels))
-    if set(annotation_labels)==set(adata_labels):
-        print('Cell type labels in gene set annotation dictionary and AnnData object are identical')
-        dict_keys_OK = True
-    if len(annotation_labels)<len(adata_labels):
-        print('The following labels are missing in the gene set annotation dictionary:',set(adata_labels)-set(annotation_labels))
-        dict_keys_OK = False
-    if len(adata_labels)<len(annotation_labels):
-        print('The following labels are missing in the AnnData object:',set(annotation_labels)-set(adata_labels))
-        dict_keys_OK = False
-        
-    #check that gene sets in dictionary have len >2
-    Counter = 0
-    annotations_new = {}
-    for k,v in annotations.items():
-        annotations_new[k] = {}
-        for k2,v2 in v.items():
-            annotations_new[k][k2]= [x for x in v2 if x in adata.var_names]
-            length = len(v2)
-            if length<3:
-                print('gene set',k2,'for cell type',k,'is of length',length)
-                Counter = Counter+1
-            
-    if Counter > 0:
-        print(Counter,'gene sets are too small. Gene sets must contain at least 3 genes')
-    elif Counter == 0 and dict_keys_OK:
-        print('Your gene set annotation dictionary is correctly formatted.')
-    if return_dict:
-        return annotations_new
-
-
-
 #importance and information score functions 
 import torch 
 

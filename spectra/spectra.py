@@ -1201,7 +1201,7 @@ filter_sets = True, label_factors=True, clean_gs = True, min_gs_num = 3, overlap
     
     #filter gene set dictionary
     if clean_gs:
-        gene_set_dictionary = spectra_util.check_gene_set_dictionary(adata, gene_set_dictionary, obs_key=cell_type_key,global_key='global', return_dict = True,min_len=min_gs_num)
+        gene_set_dictionary = spectra_util.check_gene_set_dictionary(adata, gene_set_dictionary, obs_key=cell_type_key,global_key='global', return_dict = True, min_len=min_gs_num)
     
     if L == None:
         init_flag = True
