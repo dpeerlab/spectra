@@ -1180,9 +1180,9 @@ filter_sets = True, label_factors=True, clean_gs = True, min_gs_num = 3, overlap
             whether to label the factors by their cell type specificity and their overlap coefficient with the input marker genes
         clean_gs : bool
             if True cleans up the gene set dictionary to:
-                1. to contain only genes contained in the adata. 
-                2. checks that annotations dictionary cell type keys and adata cell types are identical.
-    Checks that all gene sets in annotations dictionary contain >2 genes after filtering.
+                1. checks that annotations dictionary cell type keys and adata cell types are identical.
+                2. to contain only genes contained in the adata
+                3. to contain only gene sets greater length min_gs_num
         min_gs_num : int
             only use if clean_gs True, minimum number of genes per gene set expressed in adata, other gene sets will be filtered out
         overlap_threshold: float
