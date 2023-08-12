@@ -86,8 +86,9 @@ def check_gene_set_dictionary(adata, annotations, obs_key='cell_type_annotations
         annotations_new[k] = {}
         for k2,v2 in v.items():
             gs= [x for x in v2 if x in adata.var_names]
-            if len(v2)<min_len:
-                print('removing gene set',k2,'for cell type',k,'which is of length',len(v2),'minimum length is',min_len)
+            if len(gs)<min_len:
+                print('removing gene set',k2,'for cell type',k,'which is of length',len(v2),len(gs),'genes are found in the data.',
+                      'minimum length is',min_len)
             else:
                 annotations_new[k][k2] = gs
             
