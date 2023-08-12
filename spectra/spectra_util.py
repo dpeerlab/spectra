@@ -54,7 +54,6 @@ def check_gene_set_dictionary(adata, annotations, obs_key='cell_type_annotations
     Filters annotations dictionary to contain only genes contained in the adata. 
     Checks that annotations dictionary cell type keys and adata cell types are identical.
     Checks that all gene sets in annotations dictionary contain >2 genes after filtering.
-    if (len(adata_labels)<len(annotation_labels)) | (set(annotation_labels) != set(adata_labels)):
 
     
     adata: AnnData , data to use with Spectra
@@ -74,8 +73,8 @@ def check_gene_set_dictionary(adata, annotations, obs_key='cell_type_annotations
     if set(annotation_labels)!=set(adata_labels):
         missing_adata = set(adata_labels)-set(annotation_labels)
         missing_dict = set(annotation_labels) - set(adata_labels)
-        print('The following adata labels are missing in the gene set annotation dictionary:',missing_dict)
-        print('The following gene set annotation dictionary keys are missing in the adata labels:',missing_adata)
+        raise ValueError('The following adata labels are missing in the gene set annotation dictionary:',missing_dict,
+                        'The following gene set annotation dictionary keys are missing in the adata labels:',missing_adata)
         dict_keys_OK = False
     else:
         print('Cell type labels in gene set annotation dictionary and AnnData object are identical')
