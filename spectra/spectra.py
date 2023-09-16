@@ -1138,7 +1138,7 @@ def get_factor_celltypes(adata, obs_key, cellscore):
 
 
 def est_spectra(adata, gene_set_dictionary, L = None,use_highly_variable = True, cell_type_key = None, use_weights = True, lam = 0.008, delta=0.001,kappa = None, rho = 0.05, use_cell_types = True, n_top_vals = 50, 
-filter_sets = True, label_factors=True, overlap_threshold= 0.2, **kwargs):
+filter_sets = True, label_factors=True, clean_gs = True, min_gs_num = 3, overlap_threshold= 0.2, **kwargs):
     """ 
     
     Parameters
@@ -1178,6 +1178,13 @@ filter_sets = True, label_factors=True, overlap_threshold= 0.2, **kwargs):
             whether to filter the gene sets based on coherence
         label_factors : bool
             whether to label the factors by their cell type specificity and their overlap coefficient with the input marker genes
+        clean_gs : bool
+            if True cleans up the gene set dictionary to:
+                1. checks that annotations dictionary cell type keys and adata cell types are identical.
+                2. to contain only genes contained in the adata
+                3. to contain only gene sets greater length min_gs_num
+        min_gs_num : int
+            only use if clean_gs True, minimum number of genes per gene set expressed in adata, other gene sets will be filtered out
         overlap_threshold: float
             minimum overlap coefficient to assign an input gene set label to a factor
 
@@ -1192,7 +1199,10 @@ filter_sets = True, label_factors=True, overlap_threshold= 0.2, **kwargs):
     
     """
     
-
+    #filter gene set dictionary
+    if clean_gs:
+        gene_set_dictionary = spectra_util.check_gene_set_dictionary(adata, gene_set_dictionary, obs_key=cell_type_key,global_key='global', return_dict = True, min_len=min_gs_num)
+    
     if L == None:
         init_flag = True
         if use_cell_types:
