@@ -132,7 +132,7 @@ class SPECTRA(nn.Module):
 
     
     """
-    def __init__(self, X, labels, adj_matrix, L, weights = None, lam = 0.01, delta=0.1,kappa = None, rho = 0.05, use_cell_types = True):
+    def __init__(self, X, labels, adj_matrix, L, weights = None, lam = 0.01, delta=0.1,kappa = None, rho = None, use_cell_types = True):
         super(SPECTRA, self).__init__()
 
 
@@ -871,7 +871,7 @@ class SPECTRA_EM:
     > We notice more stable estimates from EM in general 
 
     """
-    def __init__(self, X, A, weights = None, K = 10, delta = 0.001, kappa = None,rho = 0.05,lam = 0.01, T = 3):
+    def __init__(self, X, A, weights = None, K = 10, delta = 0.001, kappa = None,rho = None,lam = 0.01, T = 3):
         self.EPS = 0.0
         #fixed constants
         self.K = K
@@ -1138,7 +1138,7 @@ def get_factor_celltypes(adata, obs_key, cellscore):
 
 
 
-def est_spectra(adata, gene_set_dictionary, L = None,use_highly_variable = True, cell_type_key = None, use_weights = True, lam = 0.01, delta=0.001,kappa = None, rho = 0.05, use_cell_types = True, n_top_vals = 50, 
+def est_spectra(adata, gene_set_dictionary, L = None,use_highly_variable = True, cell_type_key = None, use_weights = True, lam = 0.01, delta=0.001,kappa = None, rho = None, use_cell_types = True, n_top_vals = 50, 
 filter_sets = True, label_factors=True, clean_gs = True, min_gs_num = 3, overlap_threshold= 0.2, **kwargs):
     """ 
     
