@@ -132,7 +132,7 @@ class SPECTRA(nn.Module):
 
     
     """
-    def __init__(self, X, labels, adj_matrix, L, weights = None, lam = 10e-4, delta=0.1,kappa = 0.00001, rho = 0.00001, use_cell_types = True):
+    def __init__(self, X, labels, adj_matrix, L, weights = None, lam = 0.01, delta=0.1,kappa = None, rho = 0.05, use_cell_types = True):
         super(SPECTRA, self).__init__()
 
 
@@ -382,7 +382,7 @@ class spectra_attn(nn.Module):
     > tradeoff between simplex constraint and adding new genes - simplex allows using background factors
     > how to add new factors w/ attention based method, if you allow dropping 
     """
-    def __init__(self, X, K, gene_set_matrix, lambda_ = 1.0, d = 10, lam = 10e-4):
+    def __init__(self, X, K, gene_set_matrix, lambda_ = 1.0, d = 10, lam = 0.01):
         super(spectra_attn, self).__init__()
         self.p = X.shape[1]
         self.n = X.shape[0]
@@ -523,7 +523,7 @@ class SPECTRA_Model:
         model.matching(markers, gene_names_dict, threshold = 0.4):
 
     """
-    def __init__(self,X, labels,  L, vocab = None, gs_dict = None, use_weights = False, adj_matrix = None, weights = None, lam = 0.1, delta=0.1,kappa = None, rho = None, use_cell_types = True):
+    def __init__(self,X, labels,  L, vocab = None, gs_dict = None, use_weights = True, adj_matrix = None, weights = None, lam = 0.01, delta=0.1,kappa = None, rho = None, use_cell_types = True):
         self.L = L
         self.lam = lam 
         self.delta = delta 
@@ -871,7 +871,7 @@ class SPECTRA_EM:
     > We notice more stable estimates from EM in general 
 
     """
-    def __init__(self, X, A, weights = None, K = 10, delta = 0.001, kappa = 0.00001,rho = 0.001,lam = 1.0/0.01, T = 3):
+    def __init__(self, X, A, weights = None, K = 10, delta = 0.001, kappa = None,rho = 0.05,lam = 0.01, T = 3):
         self.EPS = 0.0
         #fixed constants
         self.K = K
@@ -1138,7 +1138,7 @@ def get_factor_celltypes(adata, obs_key, cellscore):
 
 
 
-def est_spectra(adata, gene_set_dictionary, L = None,use_highly_variable = True, cell_type_key = None, use_weights = True, lam = 0.008, delta=0.001,kappa = None, rho = 0.05, use_cell_types = True, n_top_vals = 50, 
+def est_spectra(adata, gene_set_dictionary, L = None,use_highly_variable = True, cell_type_key = None, use_weights = True, lam = 0.01, delta=0.001,kappa = None, rho = 0.05, use_cell_types = True, n_top_vals = 50, 
 filter_sets = True, label_factors=True, clean_gs = True, min_gs_num = 3, overlap_threshold= 0.2, **kwargs):
     """ 
     
