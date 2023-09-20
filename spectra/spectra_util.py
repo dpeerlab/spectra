@@ -22,8 +22,6 @@ process_gene_sets_no_celltypes()
 
 overlap_coefficient()
 
-get_default_dict()
-
 label_marker_genes()
 
 
@@ -36,17 +34,6 @@ def overlap_coefficient(list1, list2):
     intersection = len(list(set(list1).intersection(set(list2))))
     union = min(len(list1),len(list2))# + len(list2)) - intersection
     return float(intersection) / union
-
-
-def get_default_dict(path= pkg_resources.resource_filename(__name__, '/Spectra_dict.json')):
-    '''
-    load default gene set dictionary
-    '''
-    import json
-    # load KnowledgeBase from pickled file
-    f = open(path, 'r')
-    Spectra_dict = json.loads(f.read())
-    return Spectra_dict
 
 
 def check_gene_set_dictionary(adata, annotations, obs_key='cell_type_annotations',global_key='global', return_dict = True,min_len=3):

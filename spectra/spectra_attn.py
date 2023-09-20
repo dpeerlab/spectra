@@ -6,7 +6,7 @@ from scipy.special import logit
 from tqdm import tqdm 
 from scipy.special import xlogy
 from scipy.special import softmax
-from spectra import spectra_util 
+from Spectra import Spectra_util 
 import torch.nn as nn
 import scipy
 import pandas as pd
@@ -576,13 +576,13 @@ class SPECTRA_Model:
             gene2id = dict((v, idx) for idx, v in enumerate(vocab))
             
             if use_cell_types:
-                adj_matrix, weights = spectra_util.process_gene_sets(gs_dict = gs_dict, gene2id = gene2id, weighted = use_weights)
+                adj_matrix, weights = Spectra_util.process_gene_sets(gs_dict = gs_dict, gene2id = gene2id, weighted = use_weights)
                 #determine L
                 L = OrderedDict()
                 for key in gs_dict.keys():
                     L[key] = len(gs_dict[key]) + 1
             else:
-                adj_matrix, weights = spectra_util.process_gene_sets_no_celltypes(gs_dict = gs_dict, gene2id = gene2id, weighted = use_weights)
+                adj_matrix, weights = Spectra_util.process_gene_sets_no_celltypes(gs_dict = gs_dict, gene2id = gene2id, weighted = use_weights)
                 L = len(gs_dict) + 1
             
             
@@ -871,7 +871,7 @@ class SPECTRA_Model:
                     for gs in gene_names_dict[key].keys():
                         t = gene_names_dict[key][gs]
 
-                        jacc = spectra_util.overlap_coefficient(list(markers.iloc[i,:]),t)
+                        jacc = Spectra_util.overlap_coefficient(list(markers.iloc[i,:]),t)
                         if jacc > max_jacc:
                             max_jacc = jacc
                             best = gs 
@@ -887,7 +887,7 @@ class SPECTRA_Model:
                 for key in gene_names_dict.keys():
                     t = gene_names_dict[key]
 
-                    jacc = spectra_util.overlap_coefficient(list(markers.iloc[i,:]),t)
+                    jacc = Spectra_util.overlap_coefficient(list(markers.iloc[i,:]),t)
                     if jacc > max_jacc:
                         max_jacc = jacc
                         best = key 
