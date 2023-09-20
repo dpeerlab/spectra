@@ -1,28 +1,40 @@
 ![alt text](img/spectra_img.png?raw=true)
 
 
-## Overview
+# Quickstart
 
 SPECTRA takes in a single cell gene expression matrix, cell type annotations, and a set of pathway annotations to fit the data to. 
 
 If you use Spectra please cite our preprint on [bioRxiv](https://doi.org/10.1101/2022.12.20.521311).
 
 ```
-gene_set_annotations = {
-"global": {"global_ifn_II_response" : ["CIITA", "CXCL10", ...] , "global_MHCI": ["HLA-A". "HLA-B", "HLA-C"] },
-"CD8_T": {"CD8_exhaustion" : ["CXCL13", "LAG3", "CD39", ...]},
-...
-}
+import Spectra
+
+annotations = Spectra.default_gene_sets.load()
+adata = Spectra.sample_data.load()
+
+model = Spectra.est_spectra(
+    adata=adata, 
+    gene_set_dictionary=annotations, 
+    use_highly_variable=True,
+    cell_type_key="cell_type_annotations", 
+    use_weights=True, 
+    lam=0.1, 
+    delta=0.001,
+    kappa=0.00001,
+    rho=0.00001, 
+    use_cell_types=True,
+    n_top_vals=25, 
+    label_factors=True,
+    overlap_threshold=0.2,
+    num_epochs=2
+)
 ```
 
-Alternatively, SPECTRA can take in a set of adjacency matrices representing networks for each cell type:
+This function stores four important quantities in the AnnData, in addition to returning a fitted model object. Factors are the scores that tell you how much each gene contributes to each factor:
 
 ```
-gene_set_annotations = {
-"global": adjacency_matrix1,
-"CD8_T": adjacency_matrix2,
-...
-}
+adata.uns['SPECTRA_factors']
 ```
 
 # Installation 
@@ -30,9 +42,12 @@ gene_set_annotations = {
 A pypi package will be available soon. For installation, you can add spectra to pip:  
 
 ```
-pip install git+https://github.com/dpeerlab/spectra
+pip install scSpectra
 ```
 
+# Spectra GUI
+
+A Graphical User Interface (GUI) to sit over top SPECTRA, a factor analysis tool developed in Dana Pe'er's Lab at Memorial Sloan Kettering Cancer Research Center (MSKCC) can be found [here](https://github.com/HMC-Clinic-MSKCC-22-23/SpectraGUI).
 
 # Tutorial
 
@@ -51,7 +66,7 @@ Check out our scRNAseq knowledge base [Cytopus :octopus:](https://github.com/wal
 We start by importing spectra. The easiest way to run spectra is to use the `est_spectra` function in the `spectra` module, as shown below. The default behavior is to set the number of factors equal to the number of gene sets plus one. However, this can be modified by passing an integer e.g. `L = 20` as an argument to the function or a dictionary that maps cell type to an integer per cell type. We provide a method for estimating the number of factors directly from the data by bulk eigenvalue matching analysis, which is detailed further below. 
 
 ```
-from spectra import spectra as spc
+import Spectra as spc
 model = spc.est_spectra(adata = adata,  gene_set_dictionary = gene_set_dictionary, cell_type_key = "cell_type", use_highly_variable = True, lam = 0.01)
 ```
 
