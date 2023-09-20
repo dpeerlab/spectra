@@ -6,7 +6,7 @@ from scipy.special import logit
 from tqdm import tqdm 
 from scipy.special import xlogy
 from scipy.special import softmax
-from spectra import spectra_util 
+from Spectra import Spectra_util 
 import torch.nn as nn
 import scipy
 import pandas as pd
@@ -18,7 +18,8 @@ from torch.distributions.log_normal import LogNormal
 from torch.distributions.dirichlet import Dirichlet
 
 ### Class for SPECTRA model 
-from spectra.initialization import * 
+from Spectra.initialization import * 
+
 class SPECTRA(nn.Module): 
     """ 
     
@@ -535,9 +536,9 @@ class SPECTRA_Model:
             gene2id = dict((v, idx) for idx, v in enumerate(vocab))
             
             if use_cell_types:
-                adj_matrix, weights = spectra_util.process_gene_sets(gs_dict = gs_dict, gene2id = gene2id, weighted = use_weights)
+                adj_matrix, weights = Spectra_util.process_gene_sets(gs_dict = gs_dict, gene2id = gene2id, weighted = use_weights)
             else:
-                adj_matrix, weights = spectra_util.process_gene_sets_no_celltypes(gs_dict = gs_dict, gene2id = gene2id, weighted = use_weights)
+                adj_matrix, weights = Spectra_util.process_gene_sets_no_celltypes(gs_dict = gs_dict, gene2id = gene2id, weighted = use_weights)
 
 
         self.internal_model = SPECTRA(X = X, labels = labels, adj_matrix = adj_matrix, L = L, weights = weights, lam = lam, delta=delta,kappa = kappa, rho = rho, use_cell_types = use_cell_types)
@@ -819,7 +820,7 @@ class SPECTRA_Model:
                     for gs in gene_names_dict[key].keys():
                         t = gene_names_dict[key][gs]
 
-                        jacc = spectra_util.overlap_coefficient(list(markers.iloc[i,:]),t)
+                        jacc = Spectra_util.overlap_coefficient(list(markers.iloc[i,:]),t)
                         if jacc > max_jacc:
                             max_jacc = jacc
                             best = gs 
@@ -835,7 +836,7 @@ class SPECTRA_Model:
                 for key in gene_names_dict.keys():
                     t = gene_names_dict[key]
 
-                    jacc = spectra_util.overlap_coefficient(list(markers.iloc[i,:]),t)
+                    jacc = Spectra_util.overlap_coefficient(list(markers.iloc[i,:]),t)
                     if jacc > max_jacc:
                         max_jacc = jacc
                         best = key 
@@ -1201,7 +1202,7 @@ filter_sets = True, label_factors=True, clean_gs = True, min_gs_num = 3, overlap
     
     #filter gene set dictionary
     if clean_gs:
-        gene_set_dictionary = spectra_util.check_gene_set_dictionary(adata, gene_set_dictionary, obs_key=cell_type_key,global_key='global', return_dict = True, min_len=min_gs_num)
+        gene_set_dictionary = Spectra_util.check_gene_set_dictionary(adata, gene_set_dictionary, obs_key=cell_type_key,global_key='global', return_dict = True, min_len=min_gs_num)
     
     if L == None:
         init_flag = True
@@ -1317,7 +1318,7 @@ filter_sets = True, label_factors=True, clean_gs = True, min_gs_num = 3, overlap
         else:
             max_celltype = ['global']*(spectra.cell_scores.shape[1])
         #get gene set with maximum overlap coefficient with top marker genes
-        overlap_df  = spectra_util.label_marker_genes(adata.uns["SPECTRA_markers"] , gene_set_dictionary_flat, threshold = overlap_threshold)
+        overlap_df  = Spectra_util.label_marker_genes(adata.uns["SPECTRA_markers"] , gene_set_dictionary_flat, threshold = overlap_threshold)
 
         #create new column labels
         column_labels = []
