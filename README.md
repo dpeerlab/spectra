@@ -103,6 +103,7 @@ X = adata.X
 A = binary adjacency matrix g
 model = Spectra.SPECTRA_EM(X = X, A= A, T = 4)
 model.fit()
+```
 
 ## Parameters 
 
