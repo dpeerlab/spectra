@@ -47,23 +47,23 @@ vocab = adata.var['spectra_vocab'] # boolean matrix of size # of genes that indi
 
 `adata` : AnnData object containing cell_type_key with log count data stored in .X
 
-`gene_set_dictionary`:dict or OrderedDict() maps cell types to gene set names to gene sets ; if use_cell_types == False then maps gene set names to gene sets ; must contain "global" key in addition to every unique cell type under .obs.<cell_type_key>
+`gene_set_dictionary` : dict or OrderedDict() maps cell types to gene set names to gene sets ; if use_cell_types == False then maps gene set names to gene sets ; must contain "global" key in addition to every unique cell type under .obs.<cell_type_key>
 
-`L`: dict, OrderedDict(), int , NoneType number of factors per cell type ; if use_cell_types == False then int. Else dictionary. If None then match factors to number of gene sets (recommended)
+`L` : dict, OrderedDict(), int , NoneType number of factors per cell type ; if use_cell_types == False then int. Else dictionary. If None then match factors to number of gene sets (recommended)
 
 `use_highly_variable` : bool if True, then uses highly_variable_genes
 
-`cell_type_key`: str cell type key, must be under adata.obs.<cell_type_key> . If use_cell_types == False, this is ignored
+`cell_type_key` : str cell type key, must be under adata.obs.<cell_type_key> . If use_cell_types == False, this is ignored
 
-`use_weights`: bool if True, edge weights are estimated based on graph structure and used throughout training
+`use_weights` : bool if True, edge weights are estimated based on graph structure and used throughout training
 
-`lam`: float lambda parameter of the model. weighs relative contribution of graph and expression loss functions
+`lam` : float lambda parameter of the model. weighs relative contribution of graph and expression loss functions
 
-`delta`: float delta parameter of the model. lower bounds possible gene scaling factors so that maximum ratio of gene scalings cannot be too large
+`delta` : float delta parameter of the model. lower bounds possible gene scaling factors so that maximum ratio of gene scalings cannot be too large
 
-`kappa`: float or None if None, estimate background rate of 1s in the graph from data
+`kappa` : float or None if None, estimate background rate of 1s in the graph from data
 
-`rho`: float or None if None, estimate background rate of 0s in the graph from data
+`rho` : float or None if None, estimate background rate of 0s in the graph from data
 
 `use_cell_types` : bool if True then cell type label is used to fit cell type specific factors. If false then cell types are ignored
 
@@ -72,6 +72,13 @@ vocab = adata.var['spectra_vocab'] # boolean matrix of size # of genes that indi
 `determinant_penalty` : float determinant penalty of the attention mechanism. If set higher than 0 then sparse solutions of the attention weights and diverse attention weights are encouraged. However, tuning is crucial as setting too high reduces the selection accuracy because convergence to a hard selection occurs early during training [todo: annealing strategy]
 
 `filter_sets` : bool whether to filter the gene sets based on coherence
+
+`clean_gs` : bool if True cleans up the gene set dictionary to:
+                1. checks that annotations dictionary cell type keys and adata cell types are identical.
+                2. to contain only genes contained in the adata
+                3. to contain only gene sets greater length min_gs_num
+
+`min_gs_num` : int only use if clean_gs True, minimum number of genes per gene set expressed in adata, other gene sets will be filtered out
 
 `label_factors` : bool whether to label the factors by their cell type specificity and their Szymkiewicz–Simpson overlap coefficient with the input marker genes
 
@@ -85,8 +92,8 @@ vocab = adata.var['spectra_vocab'] # boolean matrix of size # of genes that indi
 
 **In place**: adds 1. factors, 2. cell scores, 3. vocabulary, and 4. markers as attributes in .obsm, .var, .uns
 
-**default parameters:** `est_spectra(adata, gene_set_dictionary, L = None,use_highly_variable = True, cell_type_key = "cell_type_annotations", use_weights = True, lam = 0.01, delta=0.001,kappa = None, rho = 0.001, use_cell_types = True, n_top_vals = 50, 
-filter_sets = True, label_factors=True, overlap_threshold= 0.2, **kwargs)`
+**default parameters:** `est_spectra(adata, gene_set_dictionary, L = None,use_highly_variable = True, cell_type_key = None, use_weights = True, lam = 0.01, delta=0.001,kappa = None, rho = 0.001, use_cell_types = True, n_top_vals = 50, 
+filter_sets = True, clean_gs = True, min_gs_num = 3, label_factors=True, overlap_threshold= 0.2, **kwargs)`
 
 ## labeling factors
 
