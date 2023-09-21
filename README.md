@@ -163,7 +163,7 @@ L = kst.estimate_L(adata, attribute = "cell_type", highly_variable = True)
 For smaller problems we can use a memory intensive EM algorithm instead
 ```
 X = adata.X 
-A = binary adjacency matrix 
+A = binary adjacency matrix g
 model = Spectra.SPECTRA_EM(X = X, A= A, T = 4)
 model.fit()
 
