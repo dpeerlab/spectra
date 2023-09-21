@@ -6,7 +6,7 @@ from scipy.special import logit
 from tqdm import tqdm 
 from scipy.special import xlogy
 from scipy.special import softmax
-from spectra import spectra_util 
+from Spectra import Spectra_util 
 import torch.nn as nn
 import scipy
 import pandas as pd
@@ -18,7 +18,7 @@ from torch.distributions.log_normal import LogNormal
 from torch.distributions.dirichlet import Dirichlet
 
 ### Class for SPECTRA model 
-from spectra.initialization import * 
+from Spectra.initialization import * 
 
 print("Spectra GPU support is still under development. Raise any issues on github \n \n Changes from v1: \n (1) GPU support [see tutorial] \n (2) minibatching for local parameters and data \n Note that minibatching may affect optimization results \n Code will eventually be merged into spectra.py")
 
@@ -499,9 +499,9 @@ class SPECTRA_Model:
             gene2id = dict((v, idx) for idx, v in enumerate(vocab))
             
             if use_cell_types:
-                adj_matrix, weights = spectra_util.process_gene_sets(gs_dict = gs_dict, gene2id = gene2id, weighted = use_weights)
+                adj_matrix, weights = Spectra_util.process_gene_sets(gs_dict = gs_dict, gene2id = gene2id, weighted = use_weights)
             else:
-                adj_matrix, weights = spectra_util.process_gene_sets_no_celltypes(gs_dict = gs_dict, gene2id = gene2id, weighted = use_weights)
+                adj_matrix, weights = Spectra_util.process_gene_sets_no_celltypes(gs_dict = gs_dict, gene2id = gene2id, weighted = use_weights)
 
 
         self.internal_model = SPECTRA(X = X, labels = labels, adj_matrix = adj_matrix, L = L, weights = weights, lam = lam, delta=delta,kappa = kappa, rho = rho, use_cell_types = use_cell_types)
@@ -711,7 +711,7 @@ class SPECTRA_Model:
                     for gs in gene_names_dict[key].keys():
                         t = gene_names_dict[key][gs]
 
-                        jacc = spectra_util.overlap_coefficient(list(markers.iloc[i,:]),t)
+                        jacc = Spectra_util.overlap_coefficient(list(markers.iloc[i,:]),t)
                         if jacc > max_jacc:
                             max_jacc = jacc
                             best = gs 
@@ -727,7 +727,7 @@ class SPECTRA_Model:
                 for key in gene_names_dict.keys():
                     t = gene_names_dict[key]
 
-                    jacc = spectra_util.overlap_coefficient(list(markers.iloc[i,:]),t)
+                    jacc = Spectra_util.overlap_coefficient(list(markers.iloc[i,:]),t)
                     if jacc > max_jacc:
                         max_jacc = jacc
                         best = key 

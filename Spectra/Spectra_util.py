@@ -22,8 +22,6 @@ process_gene_sets_no_celltypes()
 
 overlap_coefficient()
 
-get_default_dict()
-
 label_marker_genes()
 
 
@@ -38,18 +36,7 @@ def overlap_coefficient(list1, list2):
     return float(intersection) / union
 
 
-def get_default_dict(path= pkg_resources.resource_filename(__name__, '/Spectra_dict.json')):
-    '''
-    load default gene set dictionary
-    '''
-    import json
-    # load KnowledgeBase from pickled file
-    f = open(path, 'r')
-    Spectra_dict = json.loads(f.read())
-    return Spectra_dict
-
-
-def check_gene_set_dictionary(adata, annotations, obs_key='cell_type_annotations',global_key='global', return_dict = True,min_len=3):
+def check_gene_set_dictionary(adata, annotations, obs_key='cell_type_annotations',global_key='global', return_dict = True,min_len=3,use_cell_types=True):
     '''
     Filters annotations dictionary to contain only genes contained in the adata. 
     Checks that annotations dictionary cell type keys and adata cell types are identical.
@@ -67,7 +54,12 @@ def check_gene_set_dictionary(adata, annotations, obs_key='cell_type_annotations
     
     '''
     #test if keys match
-    adata_labels  = list(set(adata.obs[obs_key]))+['global']#cell type labels in adata object
+    if use_cell_types == False:
+        annotations = {global_key:annotations}
+    if use_cell_types:
+        adata_labels  = list(set(adata.obs[obs_key]))+[global_key]#cell type labels in adata object
+    else:
+        adata_labels  = [global_key]
     annotation_labels = list(annotations.keys())
     matching_celltype_labels = list(set(adata_labels).intersection(annotation_labels))
     if set(annotation_labels)!=set(adata_labels):
@@ -95,7 +87,10 @@ def check_gene_set_dictionary(adata, annotations, obs_key='cell_type_annotations
     if dict_keys_OK:
         print('Your gene set annotation dictionary is now correctly formatted.')
     if return_dict:
-        return annotations_new
+        if use_cell_types == False:
+            return annotations_new[global_key]
+        else:
+            return annotations_new
 
 
 def label_marker_genes(marker_genes, gs_dict, threshold = 0.4):
