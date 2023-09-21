@@ -1138,7 +1138,7 @@ def get_factor_celltypes(adata, obs_key, cellscore):
 
 
 
-def est_spectra(adata, gene_set_dictionary, L = None,use_highly_variable = True, cell_type_key = None, use_weights = True, lam = 0.01, delta=0.001,kappa = None, rho = None, use_cell_types = True, n_top_vals = 50, 
+def est_spectra(adata, gene_set_dictionary, L = None,use_highly_variable = True, cell_type_key = None, use_weights = True, lam = 0.01, delta=0.001,kappa = None, rho = 0.001, use_cell_types = True, n_top_vals = 50, 
 filter_sets = True, label_factors=True, clean_gs = True, min_gs_num = 3, overlap_threshold= 0.2, **kwargs):
     """ 
     
