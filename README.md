@@ -7,7 +7,7 @@ SPECTRA takes in a single cell gene expression matrix, cell type annotations, an
 
 If you use Spectra please cite our preprint on [bioRxiv](https://doi.org/10.1101/2022.12.20.521311).
 
-We start by importing spectra. The easiest way to run spectra is to use the `est_spectra` function in the `spectra` module, as shown below. The default behavior is to set the number of factors equal to the number of gene sets plus one. However, this can be modified by passing an integer e.g. `L = 20` as an argument to the function or a dictionary that maps cell type to an integer per cell type. We provide a method for estimating the number of factors directly from the data by bulk eigenvalue matching analysis, which is detailed further below. 
+We start by importing spectra. The easiest way to run spectra is to use the `est_spectra` function, as shown below. The default behavior is to set the number of factors equal to the number of gene sets plus one. However, this can be modified by passing an integer e.g. `L = 20` as an argument to the function or a dictionary that maps cell type to an integer per cell type. We provide a method for estimating the number of factors directly from the data by bulk eigenvalue matching analysis, which is detailed further below. 
 
 ```
 import Spectra
@@ -30,8 +30,11 @@ model = Spectra.est_spectra(
     n_top_vals=50,
     label_factors=True, 
     overlap_threshold=0.2,
+    clean_gs = True, 
+    min_gs_num = 3,
     num_epochs=10000
 )
+
 ```
 
 This function stores four important quantities in the AnnData, in addition to returning a fitted model object. Factors are the scores that tell you how much each gene contributes to each factor, while markers is an array of genes with top scores for every factor. Cell scores are similarly the score of each factor for every cell. Finally, vocab is a boolean array that is `True` for genes that were used while fitting the model - note that this quantity is only added to the AnnData when `highly_variable` is set to `True`.
@@ -152,7 +155,7 @@ Apart from cell scores and factors, we can also retrive a number of other parame
 ## Estimating the number of factors
 For most datasets you want to select the number of factors based on the number of gene sets and prior knowledge as well as the granularity of the expected gene programs. However, we also provide a method to estimate the number of factors. To estimate the number of factors first, run:
 ```
-from spectra import K_est as kst
+from Spectra import K_est as kst
 L = kst.estimate_L(adata, attribute = "cell_type", highly_variable = True)
 ```
 
@@ -161,6 +164,6 @@ For smaller problems we can use a memory intensive EM algorithm instead
 ```
 X = adata.X 
 A = binary adjacency matrix 
-model = spc.SPECTRA_EM(X = X, A= A, T = 4)
+model = Spectra.SPECTRA_EM(X = X, A= A, T = 4)
 model.fit()
 
