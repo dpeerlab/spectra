@@ -132,7 +132,7 @@ class SPECTRA(nn.Module):
 
     
     """
-    def __init__(self, X, labels, adj_matrix, L, weights = None, lam = 0.01, delta=0.1,kappa = None, rho = None, use_cell_types = True):
+    def __init__(self, X, labels, adj_matrix, L, weights = None, lam = 0.01, delta = 0.001,kappa = None, rho = 0.001, use_cell_types = True):
         super(SPECTRA, self).__init__()
 
 
@@ -523,7 +523,7 @@ class SPECTRA_Model:
         model.matching(markers, gene_names_dict, threshold = 0.4):
 
     """
-    def __init__(self,X, labels,  L, vocab = None, gs_dict = None, use_weights = True, adj_matrix = None, weights = None, lam = 0.01, delta=0.1,kappa = None, rho = None, use_cell_types = True):
+    def __init__(self,X, labels,  L, vocab = None, gs_dict = None, use_weights = True, adj_matrix = None, weights = None, lam = 0.01, delta = 0.001,kappa = None, rho = 0.001, use_cell_types = True):
         self.L = L
         self.lam = lam 
         self.delta = delta 
@@ -871,7 +871,7 @@ class SPECTRA_EM:
     > We notice more stable estimates from EM in general 
 
     """
-    def __init__(self, X, A, weights = None, K = 10, delta = 0.001, kappa = None,rho = None,lam = 0.01, T = 3):
+    def __init__(self, X, A, weights = None, K = 10, delta = 0.001, kappa = None,rho = 0.001,lam = 0.01, T = 3):
         self.EPS = 0.0
         #fixed constants
         self.K = K
