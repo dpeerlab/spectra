@@ -1,4 +1,4 @@
-![alt text](img/spectra_img.png?raw=true)
+![alt text](img/spectra_schema.png?raw=true)
 
 
 # Quickstart
