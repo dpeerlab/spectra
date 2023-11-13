@@ -54,11 +54,10 @@ def check_gene_set_dictionary(adata, annotations, obs_key='cell_type_annotations
     
     '''
     #test if keys match
-    if use_cell_types == False:
-        annotations = {global_key:annotations}
     if use_cell_types:
         adata_labels  = list(set(adata.obs[obs_key]))+[global_key]#cell type labels in adata object
     else:
+        annotations = {global_key:annotations}
         adata_labels  = [global_key]
     annotation_labels = list(annotations.keys())
     matching_celltype_labels = list(set(adata_labels).intersection(annotation_labels))
@@ -83,6 +82,10 @@ def check_gene_set_dictionary(adata, annotations, obs_key='cell_type_annotations
                       'minimum length is',min_len)
             else:
                 annotations_new[k][k2] = gs
+    
+    # raise error if no gene sets remain
+    if not use_cell_types and len(annotations_new[global_key])==0:
+        raise ValueError('No gene sets remain in the gene set annotation dictionary. Please make sure that gene names correspond to names found in `adata.var_names`. See: https://github.com/dpeerlab/spectra/issues/34.')
             
     if dict_keys_OK:
         print('Your gene set annotation dictionary is now correctly formatted.')
