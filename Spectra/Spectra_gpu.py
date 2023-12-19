@@ -259,9 +259,9 @@ class SPECTRA(nn.Module):
                     lst_weights.append(torch.Tensor(weights[cell_type]) - torch.Tensor(np.diag(np.diag(weights[cell_type]))) )
                 else:
                     lst_weights.append(torch.zeros((self.p, self.p)))
+            self.weights = torch.stack(lst_weights).to(device)
         else:
-            self.weights = self.adj_matrix      
-        self.weights = torch.stack(lst_weights).to(device)
+            self.weights = self.adj_matrix
         self.ct_order = ct_order
         self.L_tot = L_tot
         self.L_list = L_list 
