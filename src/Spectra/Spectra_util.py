@@ -338,6 +338,8 @@ def holdout_loss(model, adata, cell_type,labels):
         lst.append(((loss_cf - tot_loss)/tot_loss).detach().numpy().item())
         
     return(np.array(lst))
+
+
 def get_information_score(adata, idxs, cell_type):
     if "spectra_vocab" not in adata.var.columns:
         print("adata requires spectra_vocab attribute.")
@@ -349,8 +351,9 @@ def get_information_score(adata, idxs, cell_type):
         X = np.array(X.todense())
     X = torch.Tensor(X)
     lst = []
-    for j in range(idxs.shape[0]):
-        lst.append(mimno_coherence_2011(list(idxs[j,:]), X[labels == cell_type]))
+    # TODO: Fix undefined "labels" variable
+    #for j in range(idxs.shape[0]):
+        # lst.append(mimno_coherence_2011(list(idxs[j,:]), X[labels == cell_type]))
     return(lst)
 """
 def plot_scores(info_scores, importance_scores, eta):

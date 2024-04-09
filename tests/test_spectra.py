@@ -27,7 +27,7 @@ def test_model_default(adata, annotations):
         assert key in model.gene_scalings, f"Key {key} not in model.gene_scalings"
         assert len(model.gene_scalings[key]) == 6392, f"Gene scalings shape is not correct. Should be 6392, but is {len(model.gene_scalings[key])}"
     assert "global" in model.gene_scalings, f"Gene scalings does not contain 'global'"
-    assert len(len(model.gene_scalings["global"])) == 6392, f"Gene scalings shape is not correct. Should be 6392, but is {len(model.gene_scalings['global'])}"
+    assert len(model.gene_scalings["global"]) == 6392, f"Gene scalings shape is not correct. Should be 6392, but is {len(model.gene_scalings['global'])}"
 
     # Check shapes
     assert model.factors.shape == (196, 6392), f"Factors shape is not correct. Should be (196, 6392), but is {model.factors.shape}"

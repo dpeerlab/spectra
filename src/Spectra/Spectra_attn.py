@@ -778,7 +778,7 @@ class SPECTRA_Model:
         if model.kgeql_flag:
             theta_ct = torch.softmax(model.theta, dim = 1)
         else: 
-            seletion_ct = model.selection.softmax(dim = 1)
+            selection_ct = model.selection.softmax(dim = 1)
             theta_ct = torch.softmax(model.theta, dim = 1)
             theta_ct = contract('ij,kj->ki',selection_ct,theta_ct)
         theta = theta_ct.detach().numpy().T
