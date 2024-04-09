@@ -82,3 +82,5 @@ venv.bak/
 # mkdocs documentation
 /site
 
+# Others
+.pypi_token

@@ -1,0 +1,36 @@
+[tool.poetry]
+name = "scSpectra"
+version = "0.2.0"
+description = "Supervised discovery of interpretable gene programs from single-cell data"
+authors = [
+    "Russel Z. Kunes <KunesR@mskcc.org>",
+    "Thomas Walle <t.walle@dkfz-heidelberg.de>"
+]
+maintainers = [
+    "Russel Z. Kunes <KundesR@mskcc.org>",
+    "Tobias Krause <krauset@mskcc.org>"
+]
+license = "MIT"
+packages = [
+    {include = "Spectra", from="src"},
+    {include = "Spectra/load", from="src"},
+]
+
+[tool.poetry.dependencies]
+python = "^3.8"
+numpy = "^1.20.3"
+scipy = "^1.7.3"
+scanpy = "^1.8.2"
+torch = "^1.10.1"
+opt-einsum = "^3.3.0"
+pandas = "^1.3.5"
+tqdm = "^4.62.3"
+pyvis = "^0.1.9"
+
+[build-system]
+requires = ["poetry-core>=1.0.0"]
+build-backend = "poetry.core.masonry.api"
+
+[tool.poetry.urls]
+Publication = "https://www.nature.com/articles/s41587-023-01940-3"
+bioRxiv = "https://www.biorxiv.org/content/10.1101/2022.12.20.521311v1"
