@@ -1,4 +1,4 @@
-from .Spectra import SPECTRA, SPECTRA_EM, SPECTRA_Model
+from .Spectra import SPECTRA, SPECTRA_Model
 from .Spectra import (
     get_factor_celltypes,
     est_spectra,
