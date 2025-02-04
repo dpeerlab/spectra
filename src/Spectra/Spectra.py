@@ -42,7 +42,7 @@ class SPECTRA(nn.Module):
             > Must match cell type labels provided during training
             > Recommended practice is to assign at minimum 2 factors per cell type
             > Note that L contains the number of factors that describe the graph.
-        adj_matrix :  dict or OrderedDict
+        adj_matrix :  dict or OrderedDict [if use_cell_types == False, then ``(p, p)``-shaped binary np.array]
             ``a dictionary of adjacency matrices, one for every cell type + a "global"
             {
                 "global": ``(p, p)``-shaped binary np.ndarray
@@ -157,160 +157,155 @@ class SPECTRA(nn.Module):
         self.p = X.shape[1]
         self.n = X.shape[0]
         self.use_cell_types = use_cell_types
+        self.__initialize_parameters(labels, adj_matrix, weights, kappa, rho)
+       
 
-        if not use_cell_types:
-            # check that L is an int
-            assert isinstance(self.L, int)
+    def __initialize_parameters(self, labels, adj_matrix, weights, kappa, rho): 
+        # dispatch initialization based on use_cell_types
+        if self.use_cell_types: 
+            self.__initialize_parameters_cel_types(labels, adj_matrix, weights, kappa, rho)
+        else: 
+            self.__initialize_parameters_no_cell_types(adj_matrix, weights, kappa, rho)
 
-            # trust the user to input a np.ndarray for adj_matrix
-            self.adj_matrix = torch.Tensor(adj_matrix) - torch.Tensor(
-                np.diag(np.diag(adj_matrix))
+    def __initialize_parameters_no_cell_types(self, adj_matrix, weights, kappa, rho): 
+        # check that L is an int
+        assert isinstance(self.L, int)
+
+        # trust the user to input a np.ndarray for adj_matrix
+        self.adj_matrix = self._prepare_adj_matrix(adj_matrix)
+        self.adj_matrix_1m = self._prepare_adj_matrix(1 - adj_matrix)
+        self.weights = self._prepare_weight_matrix(weights)
+
+        self.theta = nn.Parameter(Normal(0.0, 1.0).sample([self.p, self.L]))
+        self.alpha = nn.Parameter(Normal(0.0, 1.0).sample([self.n, self.L]))
+        self.eta = nn.Parameter(Normal(0.0, 1.0).sample([self.L, self.L]))
+        self.gene_scaling = nn.Parameter(Normal(0.0, 1.0).sample([self.p]))
+
+        if kappa == None:
+            self.kappa = nn.Parameter(Normal(0.0, 1.0).sample())
+        else:
+            self.kappa = torch.tensor(np.log(kappa / (1 - kappa)))  #
+        if rho == None:
+            self.rho = nn.Parameter(Normal(0.0, 1.0).sample())
+        else:
+            self.rho = torch.tensor(np.log(rho / (1 - rho)))
+
+    def __initialize_parameters_cell_types(self, labels, adj_matrix, weights, kappa, rho): 
+        # convert adjacency matrices to pytorch tensors to make optimization easier later
+        self.adj_matrix = {
+            cell_type: (
+                self._prepare_adj_matrix(mat) 
+                if len(mat) > 0 
+                else []
             )
-            adj_matrix_1m = 1.0 - adj_matrix
-            self.adj_matrix_1m = torch.Tensor(
-                adj_matrix_1m - np.diag(np.diag(adj_matrix_1m))
+            for cell_type, mat in adj_matrix.items()
+        }
+        # for convenience store 1 - adjacency matrix elements [except on diagonal, where we store 0]
+        self.adj_matrix_1m = {
+            cell_type: (
+                self._prepare_adj_matrix(1 - mat)
+                if len(mat) > 0
+                else []
             )
-            if weights is not None:
-                self.weights = torch.Tensor(weights) - torch.Tensor(
-                    np.diag(np.diag(adj_matrix))
-                )
-            else:
-                self.weights = self.adj_matrix
+            for cell_type, mat in adj_matrix.items()
+        }  # one adj_matrix per cell type
 
-            self.theta = nn.Parameter(Normal(0.0, 1.0).sample([self.p, self.L]))
-            self.alpha = nn.Parameter(Normal(0.0, 1.0).sample([self.n, self.L]))
-            self.eta = nn.Parameter(Normal(0.0, 1.0).sample([self.L, self.L]))
-            self.gene_scaling = nn.Parameter(Normal(0.0, 1.0).sample([self.p]))
-
-            if kappa == None:
-                self.kappa = nn.Parameter(Normal(0.0, 1.0).sample())
-            else:
-                self.kappa = torch.tensor(np.log(kappa / (1 - kappa)))  #
-            if rho == None:
-                self.rho = nn.Parameter(Normal(0.0, 1.0).sample())
-            else:
-                self.rho = torch.tensor(np.log(rho / (1 - rho)))
-
-        if use_cell_types:
-            # convert adjacency matrices to pytorch tensors to make optimization easier later
-            self.adj_matrix = {
-                cell_type: (
-                    torch.Tensor(adj_matrix[cell_type])
-                    - torch.Tensor(np.diag(np.diag(adj_matrix[cell_type])))
-                    if len(adj_matrix[cell_type]) > 0
-                    else []
-                )
-                for cell_type in adj_matrix.keys()
-            }
-            # for convenience store 1 - adjacency matrix elements [except on diagonal, where we store 0]
-            adj_matrix_1m = {
-                cell_type: (
-                    1.0 - adj_matrix[cell_type]
-                    if len(adj_matrix[cell_type]) > 0
-                    else []
-                )
-                for cell_type in adj_matrix.keys()
-            }  # one adj_matrix per cell type
-            self.adj_matrix_1m = {
-                cell_type: (
-                    torch.Tensor(
-                        adj_matrix_1m[cell_type]
-                        - np.diag(np.diag(adj_matrix_1m[cell_type]))
-                    )
-                    if len(adj_matrix_1m[cell_type]) > 0
-                    else []
-                )
-                for cell_type in adj_matrix_1m.keys()
-            }  # one adj_matrix per cell type
-
-            # if weights are provided, convert these to tensors, else set weights = to adjacency matrices
-            if weights:
-                self.weights = {
-                    cell_type: (
-                        torch.Tensor(weights[cell_type])
-                        - torch.Tensor(np.diag(np.diag(weights[cell_type])))
-                        if len(weights[cell_type]) > 0
-                        else []
-                    )
-                    for cell_type in weights.keys()
-                }
-            else:
-                self.weights = self.adj_matrix
-
-            self.cell_types = np.unique(
-                labels
-            )  # cell types are the unique labels, again require knowledge of labels at initialization but do not store them
-
-            # store a dictionary containing the counts of each cell type
-            self.cell_type_counts = {}
-            for cell_type in self.cell_types:
-                n_c = sum(labels == cell_type)
-                self.cell_type_counts[cell_type] = n_c
-
-            # initialize parameters randomly, we use torch's ParameterDict() for storage for intuitive accessing cell type specific parameters
-            self.theta = nn.ParameterDict()
-            self.alpha = nn.ParameterDict()
-            self.eta = nn.ParameterDict()
-            self.gene_scaling = nn.ParameterDict()
-
-            if kappa == None:
-                self.kappa = nn.ParameterDict()
-            if rho == None:
-                self.rho = nn.ParameterDict()
-            # initialize global params
-            self.theta["global"] = nn.Parameter(
-                Normal(0.0, 1.0).sample([self.p, self.L["global"]])
+        # if weights are provided, convert these to tensors, else set weights = to adjacency matrices
+        self.weights = {
+            cell_type: (
+                self._prepare_weight_matrix(w)
+                if len(w) > 0
+                else []
             )
-            self.eta["global"] = nn.Parameter(
-                Normal(0.0, 1.0).sample([self.L["global"], self.L["global"]])
+            for cell_type, w in weights.items()
+        }
+
+        self.cell_types = np.unique(
+            labels
+        )  # cell types are the unique labels, again require knowledge of labels at initialization but do not store them
+
+        # store a dictionary containing the counts of each cell type
+        self.cell_type_counts = {}
+        for cell_type in self.cell_types:
+            n_c = sum(labels == cell_type)
+            self.cell_type_counts[cell_type] = n_c
+
+        # initialize parameters randomly, we use torch's ParameterDict() for storage for intuitive accessing cell type specific parameters
+        self.theta = nn.ParameterDict()
+        self.alpha = nn.ParameterDict()
+        self.eta = nn.ParameterDict()
+        self.gene_scaling = nn.ParameterDict()
+
+        if kappa == None:
+            self.kappa = nn.ParameterDict()
+        if rho == None:
+            self.rho = nn.ParameterDict()
+        # initialize global params
+        self.theta["global"] = nn.Parameter(
+            Normal(0.0, 1.0).sample([self.p, self.L["global"]])
+        )
+        self.eta["global"] = nn.Parameter(
+            Normal(0.0, 1.0).sample([self.L["global"], self.L["global"]])
+        )
+        self.gene_scaling["global"] = nn.Parameter(
+            Normal(0.0, 1.0).sample([self.p])
+        )
+        if kappa is None:
+            self.kappa["global"] = nn.Parameter(Normal(0.0, 1.0).sample())
+        if rho is None:
+            self.rho["global"] = nn.Parameter(Normal(0.0, 1.0).sample())
+
+        # initialize all cell type specific params
+        for cell_type in self.cell_types:
+            self.theta[cell_type] = nn.Parameter(
+                Normal(0.0, 1.0).sample([self.p, self.L[cell_type]])
             )
-            self.gene_scaling["global"] = nn.Parameter(
+            self.eta[cell_type] = nn.Parameter(
+                Normal(0.0, 1.0).sample([self.L[cell_type], self.L[cell_type]])
+            )
+            n_c = sum(labels == cell_type)
+            self.alpha[cell_type] = nn.Parameter(
+                Normal(0.0, 1.0).sample([n_c, self.L["global"] + self.L[cell_type]])
+            )
+            self.gene_scaling[cell_type] = nn.Parameter(
                 Normal(0.0, 1.0).sample([self.p])
             )
-            if kappa == None:
-                self.kappa["global"] = nn.Parameter(Normal(0.0, 1.0).sample())
-            if rho == None:
-                self.rho["global"] = nn.Parameter(Normal(0.0, 1.0).sample())
 
-            # initialize all cell type specific params
+            if kappa is None:
+                self.kappa[cell_type] = nn.Parameter(Normal(0.0, 1.0).sample())
+
+            if rho is None:
+                self.rho[cell_type] = nn.Parameter(Normal(0.0, 1.0).sample())
+
+        # if kappa and rho are provided, hold these fixed during training, else fit as free parameters
+        # to unify the cases, we put this in the same format
+        if kappa != None:
+            self.kappa = {}
+            self.kappa["global"] = torch.tensor(np.log(kappa / (1 - kappa)))
             for cell_type in self.cell_types:
-                self.theta[cell_type] = nn.Parameter(
-                    Normal(0.0, 1.0).sample([self.p, self.L[cell_type]])
-                )
-                self.eta[cell_type] = nn.Parameter(
-                    Normal(0.0, 1.0).sample([self.L[cell_type], self.L[cell_type]])
-                )
-                n_c = sum(labels == cell_type)
-                self.alpha[cell_type] = nn.Parameter(
-                    Normal(0.0, 1.0).sample([n_c, self.L["global"] + self.L[cell_type]])
-                )
-                self.gene_scaling[cell_type] = nn.Parameter(
-                    Normal(0.0, 1.0).sample([self.p])
-                )
+                self.kappa[cell_type] = torch.tensor(np.log(kappa / (1 - kappa)))
+            self.kappa = nn.ParameterDict(self.kappa)
 
-                if kappa == None:
-                    self.kappa[cell_type] = nn.Parameter(Normal(0.0, 1.0).sample())
+        if rho != None:
+            self.rho = {}
+            self.rho["global"] = torch.tensor(np.log(rho / (1 - rho)))
+            for cell_type in self.cell_types:
+                self.rho[cell_type] = torch.tensor(np.log(rho / (1 - rho)))
+            self.rho = nn.ParameterDict(self.rho)
+    
+    def __prepare_adj_matrix(self, arr):
+        return torch.Tensor(Spectra_util.zero_out_diagonal(arr))
 
-                if rho == None:
-                    self.rho[cell_type] = nn.Parameter(Normal(0.0, 1.0).sample())
+    def __prepare_weight_matrix(self, weights, adj_matrix):
+        if weights is not None:
+            return torch.Tensor(weights) - torch.Tensor(
+                np.diag(np.diag(adj_matrix))
+            )
+        else:
+            return adj_matrix
 
-            # if kappa and rho are provided, hold these fixed during training, else fit as free parameters
-            # to unify the cases, we put this in the same format
-            if kappa != None:
-                self.kappa = {}
-                self.kappa["global"] = torch.tensor(np.log(kappa / (1 - kappa)))
-                for cell_type in self.cell_types:
-                    self.kappa[cell_type] = torch.tensor(np.log(kappa / (1 - kappa)))
-                self.kappa = nn.ParameterDict(self.kappa)
 
-            if rho != None:
-                self.rho = {}
-                self.rho["global"] = torch.tensor(np.log(rho / (1 - rho)))
-                for cell_type in self.cell_types:
-                    self.rho[cell_type] = torch.tensor(np.log(rho / (1 - rho)))
-                self.rho = nn.ParameterDict(self.rho)
-
-    def loss(self, X, labels):
+    def loss_cell_types(self, X, labels):
         assert (
             self.use_cell_types
         )  # if this is False, fail because model has not been initialized to use cell types
@@ -322,27 +317,24 @@ class SPECTRA(nn.Module):
         # initialize loss and fetch global parameters
         loss = 0.0
         theta_global = torch.softmax(self.theta["global"], dim=1)
-        eta_global = (self.eta["global"]).exp() / (1.0 + (self.eta["global"]).exp())
+        eta_global = torch.sigmoid(self.eta["global"])
         eta_global = 0.5 * (eta_global + eta_global.T)
-        gene_scaling_global = self.gene_scaling["global"].exp() / (
-            1.0 + self.gene_scaling["global"].exp()
-        )
-        kappa_global = self.kappa["global"].exp() / (1 + self.kappa["global"].exp())
-        rho_global = self.rho["global"].exp() / (1 + self.rho["global"].exp())
+        gene_scaling_global = torch.sigmoid(self.gene_scaling["global"])
+        kappa_global = torch.sigmoid(self.kappa["global"])
+        rho_global = torch.sigmoid(rho["global"])
 
         # loop through cell types and evaluate loss at every cell type
         for cell_type in self.cell_types:
-            kappa = self.kappa[cell_type].exp() / (1 + self.kappa[cell_type].exp())
-            rho = self.rho[cell_type].exp() / (1 + self.rho[cell_type].exp())
-            gene_scaling_ct = self.gene_scaling[cell_type].exp() / (
-                1.0 + self.gene_scaling[cell_type].exp()
-            )
+            kappa = torch.sigmoid(self.kappa[cell_type])
+            rho = torch.sigmoid(self.rho[cell_type])
+            gene_scaling_ct = torch.sigmoid(self.gene_scaling[cell_type])
+            
             X_c = X[labels == cell_type]
             adj_matrix = self.adj_matrix[cell_type]
             weights = self.weights[cell_type]
             adj_matrix_1m = self.adj_matrix_1m[cell_type]
             theta_ct = torch.softmax(self.theta[cell_type], dim=1)
-            eta_ct = (self.eta[cell_type]).exp() / (1.0 + (self.eta[cell_type]).exp())
+            eta_ct = torch.sigmoid(self.eta[cell_type])
             eta_ct = 0.5 * (eta_ct + eta_ct.T)
             theta_global_ = contract(
                 "jk,j->jk", theta_global, gene_scaling_global + self.delta
@@ -416,11 +408,11 @@ class SPECTRA(nn.Module):
         X = torch.Tensor(X)
 
         theta = torch.softmax(self.theta, dim=1)
-        eta = self.eta.exp() / (1.0 + (self.eta).exp())
+        eta = torch.sigmoid(self.eta)
         eta = 0.5 * (eta + eta.T)
-        gene_scaling = self.gene_scaling.exp() / (1.0 + self.gene_scaling.exp())
-        kappa = self.kappa.exp() / (1 + self.kappa.exp())
-        rho = self.rho.exp() / (1 + self.rho.exp())
+        gene_scaling = torch.sigmoid(self.gene_scaling)
+        kappa = torch.sigmoid(self.kappa)
+        rho = torch.sigmoid(self.rho)
         alpha = torch.exp(self.alpha)
         adj_matrix = self.adj_matrix
         weights = self.weights
@@ -686,12 +678,8 @@ class SPECTRA_Model:
         for i in tqdm(range(num_epochs)):
             # print(counter)
             opt.zero_grad()
-            if self.internal_model.use_cell_types:
-                assert len(labels) == X.shape[0]
-                loss = self.internal_model.loss(X, labels)
-            elif self.internal_model.use_cell_types == False:
-                loss = self.internal_model.loss_no_cell_types(X)
 
+            loss =self.__get_loss(labels, X)
             loss.backward()
             opt.step()
 
@@ -714,6 +702,14 @@ class SPECTRA_Model:
             self.__store_parameters(labels)
         else:
             self.__store_parameters_no_celltypes()
+
+    def __get_loss(self, labels, X):
+        if self.internal_model.use_cell_types:
+            assert len(labels) == X.shape[0]
+            return self.internal_model.loss_cell_types(X, labels)
+        elif self.internal_model.use_cell_types == False:
+            return self.internal_model.loss_no_cell_types(X)
+
 
     def save(self, fp):
         torch.save(self.internal_model.state_dict(), fp)
@@ -817,7 +813,7 @@ class SPECTRA_Model:
         k = sum(list(model.L.values()))
         out = np.zeros(k)
 
-        Bg = model.eta["global"].exp() / (1.0 + model.eta["global"].exp())
+        Bg = torch.sigmoid(model.eta["global"])
         Bg = 0.5 * (Bg + Bg.T)
         B = torch.diag(Bg).detach().numpy()
         tot = 0
@@ -825,7 +821,7 @@ class SPECTRA_Model:
         tot += B.shape[0]
 
         for cell_type in model.cell_types:
-            Bg = model.eta[cell_type].exp() / (1.0 + model.eta[cell_type].exp())
+            Bg = torch.sigmoid(model.eta[cell_type])
             Bg = 0.5 * (Bg + Bg.T)
             B = torch.diag(Bg).detach().numpy()
             out[tot : tot + B.shape[0]] = B
@@ -837,12 +833,12 @@ class SPECTRA_Model:
     def __eta_matrices(self):
         model = self.internal_model
         eta = OrderedDict()
-        Bg = model.eta["global"].exp() / (1.0 + model.eta["global"].exp())
+        Bg = torch.sigmoid(model.eta["global"])
         Bg = 0.5 * (Bg + Bg.T)
         eta["global"] = Bg.detach().numpy()
 
         for cell_type in model.cell_types:
-            Bg = model.eta[cell_type].exp() / (1.0 + model.eta[cell_type].exp())
+            Bg = torch.sigmoid(model.eta[cell_type])
             Bg = 0.5 * (Bg + Bg.T)
             eta[cell_type] = Bg.detach().numpy()
         return eta
@@ -866,25 +862,23 @@ class SPECTRA_Model:
         factors = theta
 
         scaled = factors * (
-            model.gene_scaling.exp().detach()
-            / (1.0 + model.gene_scaling.exp().detach())
+            torch.sigmoid(model.gene_scaling.detach())
             + model.delta
         ).numpy().reshape(1, -1)
         new_factors = scaled / (scaled.sum(axis=0, keepdims=True) + 1.0)
 
         self.factors = new_factors
         self.cell_scores = out * scaled.mean(axis=1).reshape(1, -1)
-        Bg = model.eta.exp() / (1.0 + model.eta.exp())
+        Bg = torch.sigmoid(model.eta)
         Bg = 0.5 * (Bg + Bg.T)
         self.B_diag = torch.diag(Bg).detach().numpy()
         self.eta_matrices = Bg.detach().numpy()
         self.gene_scalings = (
-            model.gene_scaling.exp().detach()
-            / (1.0 + model.gene_scaling.exp().detach())
+            torch.sigmoid(model.gene_scaling.detach())
         ).numpy()
-        self.rho = (model.rho.exp().detach() / (1.0 + model.rho.exp().detach())).numpy()
+        self.rho = torch.sigmoid(model.rho.detach())
         self.kappa = (
-            model.kappa.exp().detach() / (1.0 + model.kappa.exp().detach())
+            torch.sigmoid(model.kappa.detach())
         ).numpy()
 
     def initialize(self, annotations, word2id, W, init_scores, val=25):

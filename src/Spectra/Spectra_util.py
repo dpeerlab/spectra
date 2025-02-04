@@ -430,6 +430,12 @@ def get_information_score(adata, idxs, cell_type):
     # lst.append(mimno_coherence_2011(list(idxs[j,:]), X[labels == cell_type]))
     return lst
 
+def zero_out_diagonal(arr): 
+    """
+    Zero out the diagonal from a numpy array 
+    """
+    return arr - np.diag(np.diag(arr))
+
 
 """
 def plot_scores(info_scores, importance_scores, eta):

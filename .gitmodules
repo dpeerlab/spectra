@@ -1,0 +1,3 @@
+[submodule "SOFA"]
+	path = SOFA
+	url = https://github.com/tcapraz/SOFA.git
