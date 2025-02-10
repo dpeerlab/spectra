@@ -222,7 +222,20 @@ def unravel_dict(dict_):
     return lst
 
 
-def process_gene_sets(gs_dict, gene2id, weighted=True):
+def process_gene_sets(use_cell_types, gs_dict, gene2id, weighted=True): 
+    if use_cell_types:
+        adj_matrix, weights = process_gene_sets_cell_types(
+            gs_dict=gs_dict, gene2id=gene2id, weighted=weighted
+        )
+    else:
+        adj_matrix, weights = process_gene_sets_no_cell_types(
+            gs_dict=gs_dict, gene2id=gene2id, weighted=weighted
+        )
+
+    return adj_matrix, weights
+
+
+def process_gene_sets_cell_types(gs_dict, gene2id, weighted=True):
     """
     { "global": {"<gene set name>": [<gene 1>, <gene 2>, ...]}
     }
@@ -248,7 +261,7 @@ def process_gene_sets(gs_dict, gene2id, weighted=True):
     return adict, weights
 
 
-def process_gene_sets_no_celltypes(gs_dict, gene2id, weighted=True):
+def process_gene_sets_no_cell_types(gs_dict, gene2id, weighted=True):
     """
     input: {"<gene set name>": [<gene 1>, <gene 2>, ...]}
     }

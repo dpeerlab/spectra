@@ -20,6 +20,13 @@ from torch.distributions.dirichlet import Dirichlet
 ### Class for SPECTRA model
 from Spectra.initialization import *
 
+"""
+TODO: separate each task into two functions, one for cell type specific and one for non cell type specific 
+TODO: decide on whether to separate the two implementations into separate classes 
+TODO: decide on whether to somehow represent both cases using one representation 
+TODO: test the functions. ask roshan how to do the testing. 
+"""
+
 
 class SPECTRA(nn.Module):
     """
@@ -163,7 +170,7 @@ class SPECTRA(nn.Module):
     def __initialize_parameters(self, labels, adj_matrix, weights, kappa, rho): 
         # dispatch initialization based on use_cell_types
         if self.use_cell_types: 
-            self.__initialize_parameters_cel_types(labels, adj_matrix, weights, kappa, rho)
+            self.__initialize_parameters_cell_types(labels, adj_matrix, weights, kappa, rho)
         else: 
             self.__initialize_parameters_no_cell_types(adj_matrix, weights, kappa, rho)
 
@@ -172,9 +179,9 @@ class SPECTRA(nn.Module):
         assert isinstance(self.L, int)
 
         # trust the user to input a np.ndarray for adj_matrix
-        self.adj_matrix = self._prepare_adj_matrix(adj_matrix)
-        self.adj_matrix_1m = self._prepare_adj_matrix(1 - adj_matrix)
-        self.weights = self._prepare_weight_matrix(weights)
+        self.adj_matrix = self.__prepare_adj_matrix(adj_matrix)
+        self.adj_matrix_1m = self.__prepare_adj_matrix(1 - adj_matrix)
+        self.weights = self.__prepare_weight_matrix(weights)
 
         self.theta = nn.Parameter(Normal(0.0, 1.0).sample([self.p, self.L]))
         self.alpha = nn.Parameter(Normal(0.0, 1.0).sample([self.n, self.L]))
@@ -446,7 +453,7 @@ class SPECTRA(nn.Module):
 
         return self.lam * term1 + term2 + term3
 
-    def initialize(self, gene_sets, val):
+    def initialize_cell_types(self, gene_sets, val):
         """
         form of gene_sets:
 
@@ -486,7 +493,7 @@ class SPECTRA(nn.Module):
             -val
         )
 
-    def initialize_no_celltypes(self, gs_list, val):
+    def initialize_no_cell_types(self, gs_list, val):
         assert self.L >= len(gs_list)
         count = 0
         for gene_set in gs_list:
@@ -633,14 +640,10 @@ class SPECTRA_Model:
         if gs_dict is not None:
             gene2id = dict((v, idx) for idx, v in enumerate(vocab))
 
-            if use_cell_types:
-                adj_matrix, weights = Spectra_util.process_gene_sets(
-                    gs_dict=gs_dict, gene2id=gene2id, weighted=use_weights
-                )
-            else:
-                adj_matrix, weights = Spectra_util.process_gene_sets_no_celltypes(
-                    gs_dict=gs_dict, gene2id=gene2id, weighted=use_weights
-                )
+            adj_matrix, weights = Spectra_util.process_gene_sets(gs_dict=gs_dict, 
+                                                                 gene2id=gene2id, 
+                                                                 use_cell_types=use_cell_types, 
+                                                                 weighted=use_weights)
 
         self.internal_model = SPECTRA(
             X=X,
@@ -718,11 +721,11 @@ class SPECTRA_Model:
         self.internal_model.load_state_dict(torch.load(fp))
         if self.use_cell_types:
             assert labels is not None
-            self.__store_parameters(labels)
+            self.__store_parameters_cell_types(labels)
         else:
-            self.__store_parameters_no_celltypes()
+            self.__store_parameters_no_cell_types()
 
-    def __store_parameters(self, labels):
+    def __store_parameters_cell_types(self, labels):
         """
         Replaces __cell_scores() and __compute factors() and __compute_theta()
         store parameters after fitting the model:
@@ -778,8 +781,7 @@ class SPECTRA_Model:
             scaled = (
                 factors[i, :]
                 * (
-                    model.gene_scaling[ct].exp().detach()
-                    / (1.0 + model.gene_scaling[ct].exp().detach())
+                    torch.sigmoid(model.gene_scaling[ct]).detach()
                     + model.delta
                 ).numpy()
             )
@@ -793,18 +795,15 @@ class SPECTRA_Model:
         self.B_diag = self.__B_diag()
         self.eta_matrices = self.__eta_matrices()
         self.gene_scalings = {
-            ct: model.gene_scaling[ct].exp().detach().numpy()
-            / (1.0 + model.gene_scaling[ct].exp().detach().numpy())
+            ct: torch.sigmoid(model.gene_scaling[ct]).detach().numpy()
             for ct in model.gene_scaling.keys()
         }
         self.rho = {
-            ct: model.rho[ct].exp().detach().numpy()
-            / (1.0 + model.rho[ct].exp().detach().numpy())
+            ct: torch.sigmoid(model.rho[ct]).detach().numpy()
             for ct in model.rho.keys()
         }
         self.kappa = {
-            ct: model.kappa[ct].exp().detach().numpy()
-            / (1.0 + model.kappa[ct].exp().detach().numpy())
+            ct: torch.sigmoid(model.kappa[ct]).detach().numpy()
             for ct in model.kappa.keys()
         }
 
@@ -843,7 +842,7 @@ class SPECTRA_Model:
             eta[cell_type] = Bg.detach().numpy()
         return eta
 
-    def __store_parameters_no_celltypes(self):
+    def __store_parameters_no_cell_types(self):
         """
         store parameters after fitting the model:
             cell scores
@@ -909,7 +908,7 @@ class SPECTRA_Model:
                                 idxs.append(word2id[word])
                         lst_ct.append(idxs)
                 gs_dict[ct] = lst_ct
-            self.internal_model.initialize(gene_sets=gs_dict, val=val)
+            self.internal_model.initialize_cell_types(gene_sets=gs_dict, val=val)
         else:
             if init_scores == None:
                 init_scores = compute_init_scores_noct(
@@ -928,7 +927,7 @@ class SPECTRA_Model:
                         if word in word2id:
                             idxs.append(word2id[word])
                     lst.append(idxs)
-            self.internal_model.initialize_no_celltypes(gs_list=lst, val=val)
+            self.internal_model.initialize_no_cell_types(gs_list=lst, val=val)
 
     def return_eta_diag(self):
         return self.B_diag
