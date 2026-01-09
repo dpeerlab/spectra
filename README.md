@@ -60,7 +60,7 @@ pip install scSpectra
 
 # scRNAseq Knowledge Base
 
-Check out our scRNAseq knowledge base [Cytopus :octopus:](https://github.com/dpeerlab/cytopus) to retrieve *Spectra* input gene sets adapted to the cell type composition in your data.
+Check out our scRNAseq knowledge base [Cytopus :octopus:](https://github.com/wallet-maker/cytopus) to retrieve *Spectra* input gene sets adapted to the cell type composition in your data.
 
 # Spectra GUI
 
