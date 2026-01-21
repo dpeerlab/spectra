@@ -5,7 +5,7 @@
 
 SPECTRA takes in a single cell gene expression matrix, cell type annotations, and gene sets for cellular processes to fit the data to. 
 
-If you use Spectra please cite our preprint on [bioRxiv](https://doi.org/10.1101/2022.12.20.521311).
+If you use Spectra please cite our [paper](https://www.nature.com/articles/s41587-023-01940-3): Kunes et al., _Nat Biotechnol_, 2023.
 
 We start by importing spectra. The easiest way to run spectra is to use the `est_spectra` function, as shown below. The default behavior is to set the number of factors equal to the number of gene sets plus one. However, this can be modified by passing an integer e.g. `L = 20` as an argument to the function or a dictionary that maps cell type to an integer per cell type. We provide a method for estimating the number of factors directly from the data by bulk eigenvalue matching analysis, which is detailed further below. 
 
