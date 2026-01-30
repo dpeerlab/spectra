@@ -1609,8 +1609,8 @@ def est_spectra(
     adata.uns["SPECTRA_markers"] = return_markers(
         factor_matrix=spectra.factors, id2word=id2word, n_top_vals=n_top_vals
     )
-    adata.uns["SPECTRA_L"] = L
-
+    adata.uns["SPECTRA_L"] = dict(L) #convert to dictionary for compatibility with anndata
+    
     # label factors
 
     # transform input nested dictionary into a flat dictionary
